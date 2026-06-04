@@ -401,6 +401,26 @@
           align-self: flex-start;
         }
       }
+
+      /* Grilla Responsiva de 4 Columnas (Hito 13) */
+      .responsive-grid-4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.5rem;
+      }
+
+      @media (max-width: 1024px) {
+        .responsive-grid-4 {
+          grid-template-columns: repeat(2, 1fr) !important;
+        }
+      }
+
+      @media (max-width: 600px) {
+        .responsive-grid-4 {
+          grid-template-columns: 1fr !important;
+          gap: 1rem;
+        }
+      }
     </style>
   </head>
   <body>
@@ -3459,29 +3479,29 @@
                     </button>
                   </div>
                   
-                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', width: '100%', maxWidth: '360px' }}>
                     <button 
                       type="button"
                       onClick={handlePrevDay} 
                       className="btn btn-secondary"
-                      style={{ padding: '0.5rem 0.75rem', display: 'flex', alignItems: 'center', fontSize: '0.8rem' }}
+                      style={{ padding: '0.5rem 0.75rem', display: 'flex', alignItems: 'center', fontSize: '0.8rem', minWidth: '40px', justifyContent: 'center' }}
                     >
-                      ← Anterior
+                      ← <span className="hide-mobile" style={{ marginLeft: '0.25rem' }}>Anterior</span>
                     </button>
                     <input 
                       type="date" 
                       className="form-input" 
                       value={selectedDate}
                       onChange={(e) => setSelectedDate(e.target.value)}
-                      style={{ width: '160px', padding: '0.4rem 0.75rem', textAlign: 'center' }}
+                      style={{ flex: 1, minWidth: 0, padding: '0.4rem 0.75rem', textAlign: 'center' }}
                     />
                     <button 
                       type="button"
                       onClick={handleNextDay} 
                       className="btn btn-secondary"
-                      style={{ padding: '0.5rem 0.75rem', display: 'flex', alignItems: 'center', fontSize: '0.8rem' }}
+                      style={{ padding: '0.5rem 0.75rem', display: 'flex', alignItems: 'center', fontSize: '0.8rem', minWidth: '40px', justifyContent: 'center' }}
                     >
-                      Siguiente →
+                      <span className="hide-mobile" style={{ marginRight: '0.25rem' }}>Siguiente</span> →
                     </button>
                   </div>
                 </div>
@@ -4031,7 +4051,7 @@
                   <h4 style={{ marginBottom: '1rem', color: 'var(--color-text-main)', fontSize: '1.1rem' }}>
                     Comportamiento y Tasa de Retención de Atletas
                   </h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', textAlign: 'center', flexWrap: 'wrap' }}>
+                  <div className="responsive-grid-4" style={{ textAlign: 'center' }}>
                     <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border-glass)', borderRadius: '8px' }}>
                       <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Turnos Solicitados</span>
                       <h3 style={{ fontSize: '1.8rem', marginTop: '0.25rem' }}>{stats.creditsConsumed + stats.cancellationsCount}</h3>

@@ -532,3 +532,23 @@ p {
   }
 }
 
+/* Grilla Responsiva de 4 Columnas (Hito 13) */
+.responsive-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .responsive-grid-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .responsive-grid-4 {
+    grid-template-columns: 1fr !important;
+    gap: 1rem;
+  }
+}
+
