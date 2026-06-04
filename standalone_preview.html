@@ -4607,6 +4607,18 @@
         const [statusMsg, setStatusMsg] = React.useState({ text: '', type: '' });
         const [wods, setWods] = React.useState([]);
 
+        // Estados del Asistente Gemini IA
+        const [geminiApiKey, setGeminiApiKey] = React.useState(localStorage.getItem('gemini_api_key') || '');
+        const [showApiKey, setShowApiKey] = React.useState(false);
+        const [activeMesocycle, setActiveMesocycle] = React.useState('fuerza'); // 'fuerza', 'volumen', 'vo2_max', 'deload', 'peaking'
+        const [includeVo2Max, setIncludeVo2Max] = React.useState(false);
+        const [cardioType, setCardioType] = React.useState('running'); // 'running', 'row', 'ski', 'bike', 'mixed'
+        const [aiPrompt, setAiPrompt] = React.useState('');
+        const [aiLoading, setAiLoading] = React.useState(false);
+        const [generatedWodPreview, setGeneratedWodPreview] = React.useState(null);
+        const [chatMessage, setChatMessage] = React.useState('');
+        const [aiError, setAiError] = React.useState('');
+
         React.useEffect(() => {
           loadExercises();
           loadWods();
@@ -4677,6 +4689,220 @@
           } catch (err) {
             console.error(err);
           }
+        };
+
+        // Funciones de Integración con Gemini IA
+        const cleanGeminiJson = (text) => {
+          let clean = text.trim();
+          if (clean.startsWith('```')) {
+            clean = clean.replace(/^```json\s*/i, '');
+            clean = clean.replace(/^```\s*/, '');
+            clean = clean.replace(/```$/, '');
+          }
+          return clean.trim();
+        };
+
+        const handleSaveApiKey = (key) => {
+          setGeminiApiKey(key);
+          localStorage.setItem('gemini_api_key', key);
+          showMsg('API Key de Gemini guardada.', 'success');
+        };
+
+        const handleGenerateWod = async () => {
+          setAiError('');
+          if (!geminiApiKey) {
+            setAiError('Por favor, ingresa tu API Key de Gemini en la configuración.');
+            return;
+          }
+          setAiLoading(true);
+
+          const catalogNames = exercisesCatalog.map(ex => ex.name).join(', ');
+
+          const prompt = `Eres un Entrenador de CrossFit Certificado (Nivel 3/4) experto en fisiología del deporte y periodización de mesociclos. Tu box cuenta con el siguiente catálogo de ejercicios técnicos oficiales: [${catalogNames}].
+          Genera un entrenamiento estructurado para la fecha actual (tipo de WOD: ${wodType}) en base a las siguientes configuraciones de entrenamiento:
+          - Mesociclo de periodización: ${activeMesocycle} (donde 'fuerza' es fuerza máxima con bajas repeticiones >= 80% 1RM; 'volumen' es cargas moderadas con 8-12 reps; 'vo2_max' es foco en acondicionamiento metabólico cardiovascular y resistencia; 'deload' es descarga de baja intensidad; y 'peaking' es puesta a punto de alta intensidad).
+          - Incluir entrenamiento específico de VO2 Max: ${includeVo2Max ? 'Sí, enfocado en ' + cardioType : 'No'}.
+          - Indicación personalizada del Coach: ${aiPrompt || 'Ninguna'}.
+          
+          Debes retornar un objeto JSON que siga EXACTAMENTE la siguiente estructura:
+          {
+            "titulo": "String corto y descriptivo del entrenamiento del día",
+            "warmup": {
+              "habilitado": true/false,
+              "descripcion": "Instrucciones detalladas de entrada en calor en español, enfocadas en movilidad y aproximación al WOD",
+              "ejercicios": []
+            },
+            "strength": {
+              "habilitado": true/false,
+              "descripcion": "Instrucciones detalladas del trabajo de fuerza o habilidad técnica en español. Si está habilitado, incluye series, repeticiones y porcentajes sugeridos de RM.",
+              "ejercicios": [
+                { "nombre": "Nombre exacto del ejercicio que coincida con el catálogo (ej: 'Back Squat' o 'Snatch')", "porcentaje": 75, "reps": "5 sets x 3 reps" }
+              ]
+            },
+            "conditioning": {
+              "habilitado": true/false,
+              "descripcion": "Instrucciones completas del acondicionamiento (WOD principal) en español (ej: AMRAP, EMOM, RFT, Chipper, indicando tiempos, movimientos y pesos Rx).",
+              "ejercicios": []
+            },
+            "midline": {
+              "habilitado": true/false,
+              "descripcion": "Instrucciones de core, estabilidad abdominal y accesorios en español",
+              "ejercicios": []
+            },
+            "extra": {
+              "habilitado": true/false,
+              "descripcion": "Instrucciones de trabajo extra/cardio en español (si se seleccionó VO2 Max, diseña AQUÍ un entrenamiento específico e intenso de VO2 Max con máquinas o running, ej: intervalos de remo de 500m con tiempos de descanso idénticos Z5)",
+              "ejercicios": []
+            }
+          }
+          
+          IMPORTANTE: La IA puede decidir libremente desactivar (habilitado: false) partes del WOD según el enfoque (por ejemplo, si el enfoque es puramente metabólico de VO2 Max largo, puede desactivar el bloque 'strength'). Responde ÚNICAMENTE con el objeto JSON válido. No uses bloques de código markdown como \`\`\`json ni agregues texto explicativo fuera del JSON.`;
+
+          try {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }]
+              })
+            });
+
+            if (!res.ok) {
+              const errData = await res.json();
+              throw new Error(errData.error?.message || 'Error en la API de Gemini');
+            }
+
+            const data = await res.json();
+            const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            const cleanJsonStr = cleanGeminiJson(rawText);
+            const parsedWod = JSON.parse(cleanJsonStr);
+            setGeneratedWodPreview(parsedWod);
+          } catch (err) {
+            console.error(err);
+            setAiError(`Error de generación: ${err.message}. Asegúrate de que la API Key sea correcta.`);
+          } finally {
+            setAiLoading(false);
+          }
+        };
+
+        const handleModifyWod = async () => {
+          if (!chatMessage.trim()) return;
+          setAiError('');
+          setAiLoading(true);
+
+          const catalogNames = exercisesCatalog.map(ex => ex.name).join(', ');
+
+          const prompt = `Tienes la siguiente propuesta de entrenamiento de CrossFit (WOD) en formato JSON:
+          ${JSON.stringify(generatedWodPreview || {
+            titulo: wodTitle,
+            warmup: warmupBlock,
+            strength: strengthBlock,
+            conditioning: conditioningBlock,
+            midline: midlineBlock,
+            extra: extraBlock
+          })}
+          
+          El catálogo oficial de ejercicios del box es: [${catalogNames}].
+          
+          El coach solicita realizar la siguiente modificación: "${chatMessage}"
+          
+          Aplica el cambio solicitado modificando la estructura del JSON y retorna el WOD completo modificado. Si el coach te pide agregar o quitar secciones, cambia el flag 'habilitado' (true/false) de la sección correspondiente. Si agrega un ejercicio de fuerza, intenta usar un nombre exacto del catálogo para que se calculen los % de RM.
+          
+          Responde ÚNICAMENTE con el objeto JSON modificado, sin bloques de código markdown y sin explicaciones externas.`;
+
+          try {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }]
+              })
+            });
+
+            if (!res.ok) {
+              const errData = await res.json();
+              throw new Error(errData.error?.message || 'Error al modificar WOD con Gemini');
+            }
+
+            const data = await res.json();
+            const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            const cleanJsonStr = cleanGeminiJson(rawText);
+            const parsedWod = JSON.parse(cleanJsonStr);
+            setGeneratedWodPreview(parsedWod);
+            setChatMessage('');
+          } catch (err) {
+            console.error(err);
+            setAiError(`Error al modificar: ${err.message}`);
+          } finally {
+            setAiLoading(false);
+          }
+        };
+
+        const mapExercisesFromNames = (names) => {
+          if (!names) return [];
+          return names.map(name => {
+            const catalogEx = exercisesCatalog.find(c => c.name.toLowerCase() === name.toLowerCase());
+            return {
+              nombre: catalogEx ? catalogEx.name : name,
+              videoUrl: catalogEx ? catalogEx.videoUrl : ''
+            };
+          });
+        };
+
+        const handleApplyWod = () => {
+          if (!generatedWodPreview) return;
+          setWodTitle(generatedWodPreview.titulo || '');
+          
+          if (generatedWodPreview.warmup) {
+            setWarmupBlock({
+              habilitado: !!generatedWodPreview.warmup.habilitado,
+              descripcion: generatedWodPreview.warmup.descripcion || '',
+              ejercicios: mapExercisesFromNames(generatedWodPreview.warmup.ejercicios || [])
+            });
+          }
+          
+          if (generatedWodPreview.strength) {
+            setStrengthBlock({
+              habilitado: !!generatedWodPreview.strength.habilitado,
+              descripcion: generatedWodPreview.strength.descripcion || '',
+              ejercicios: (generatedWodPreview.strength.ejercicios || []).map(ex => {
+                const catalogEx = exercisesCatalog.find(c => c.name.toLowerCase() === ex.nombre.toLowerCase());
+                return {
+                  nombre: catalogEx ? catalogEx.name : ex.nombre,
+                  videoUrl: catalogEx ? catalogEx.videoUrl : '',
+                  porcentaje: Number(ex.porcentaje) || 75,
+                  reps: ex.reps || '5x3'
+                };
+              })
+            });
+          }
+          
+          if (generatedWodPreview.conditioning) {
+            setConditioningBlock({
+              habilitado: !!generatedWodPreview.conditioning.habilitado,
+              descripcion: generatedWodPreview.conditioning.descripcion || '',
+              ejercicios: mapExercisesFromNames(generatedWodPreview.conditioning.ejercicios || [])
+            });
+          }
+          
+          if (generatedWodPreview.midline) {
+            setMidlineBlock({
+              habilitado: !!generatedWodPreview.midline.habilitado,
+              descripcion: generatedWodPreview.midline.descripcion || '',
+              ejercicios: mapExercisesFromNames(generatedWodPreview.midline.ejercicios || [])
+            });
+          }
+          
+          if (generatedWodPreview.extra) {
+            setExtraBlock({
+              habilitado: !!generatedWodPreview.extra.habilitado,
+              descripcion: generatedWodPreview.extra.descripcion || '',
+              ejercicios: mapExercisesFromNames(generatedWodPreview.extra.ejercicios || [])
+            });
+          }
+
+          showMsg('Entrenamiento de la IA aplicado al planificador. Recuerda guardarlo.', 'success');
+          setGeneratedWodPreview(null);
         };
 
         const handleAddExerciseToBlock = (blockName) => {
@@ -5176,6 +5402,204 @@
               {/* Sidebar Informativo */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 
+                {/* Asistente de Programación Gemini IA */}
+                <div className="glass-card" style={{ borderLeft: '4px solid var(--color-accent)', backgroundImage: 'linear-gradient(135deg, rgba(6, 182, 212, 0.05) 0%, rgba(17, 24, 39, 0.95) 100%)' }}>
+                  <h4 style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.75rem', color: 'var(--color-accent)' }}>
+                    🤖 Asistente Gemini IA
+                  </h4>
+                  <p style={{ fontSize: '0.8rem', marginBottom: '1rem', color: 'var(--color-text-muted)' }}>
+                    Genera planificaciones de WOD adaptadas a mesociclos y objetivos de VO2 Max.
+                  </p>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {/* API Key Input */}
+                    <div className="form-group" style={{ marginBottom: '0.5rem' }}>
+                      <label className="form-label" style={{ fontSize: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Gemini API Key</span>
+                        <span 
+                          style={{ cursor: 'pointer', color: 'var(--color-accent)', textDecoration: 'underline' }}
+                          onClick={() => setShowApiKey(!showApiKey)}
+                        >
+                          {showApiKey ? 'Ocultar' : 'Ver'}
+                        </span>
+                      </label>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <input 
+                          type={showApiKey ? 'text' : 'password'} 
+                          className="form-input" 
+                          style={{ padding: '0.35rem', fontSize: '0.8rem', flex: 1 }}
+                          placeholder="AIzaSy..."
+                          value={geminiApiKey}
+                          onChange={(e) => handleSaveApiKey(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Mesocycle Focus */}
+                    <div className="form-group" style={{ marginBottom: '0.5rem' }}>
+                      <label className="form-label" style={{ fontSize: '0.75rem' }}>Mesociclo Activo</label>
+                      <select 
+                        className="form-select" 
+                        style={{ padding: '0.35rem', fontSize: '0.8rem' }}
+                        value={activeMesocycle}
+                        onChange={(e) => setActiveMesocycle(e.target.value)}
+                      >
+                        <option value="fuerza">Fuerza Máxima (Foco 1RM)</option>
+                        <option value="volumen">Volumen / Hipertrofia (Cargas medias)</option>
+                        <option value="vo2_max">Entrenamiento VO2 Max (Resistencia/Metabólico)</option>
+                        <option value="deload">Descarga / Transición (Baja intensidad)</option>
+                        <option value="peaking">Puesta a punto (Alta intensidad)</option>
+                      </select>
+                    </div>
+
+                    {/* VO2 Max Checkbox and machine */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', background: 'rgba(255,255,255,0.01)', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border-glass)', marginBottom: '0.5rem' }}>
+                      <label style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', color: 'var(--color-text-main)' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={includeVo2Max}
+                          onChange={(e) => setIncludeVo2Max(e.target.checked)}
+                          style={{ width: '15px', height: '15px' }}
+                        />
+                        Incluir Intervalos VO2 Max
+                      </label>
+
+                      {includeVo2Max && (
+                        <div className="form-group" style={{ marginBottom: 0, marginTop: '0.25rem' }}>
+                          <label className="form-label" style={{ fontSize: '0.7rem' }}>Máquina / Cardio Focus</label>
+                          <select 
+                            className="form-select" 
+                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+                            value={cardioType}
+                            onChange={(e) => setCardioType(e.target.value)}
+                          >
+                            <option value="running">Running / Carrera de intervalos</option>
+                            <option value="row">Remo (Rowing Ergometer)</option>
+                            <option value="ski">SkiErg (Esquí de fondo)</option>
+                            <option value="bike">Assault Bike / AirBike</option>
+                            <option value="mixed">Mixto (Combinado de máquinas)</option>
+                          </select>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Custom Prompt Instructions */}
+                    <div className="form-group" style={{ marginBottom: '0.5rem' }}>
+                      <label className="form-label" style={{ fontSize: '0.75rem' }}>Indicaciones Especiales (Prompt)</label>
+                      <textarea 
+                        className="form-textarea" 
+                        rows="2" 
+                        style={{ padding: '0.35rem', fontSize: '0.8rem' }}
+                        placeholder="Ej: 'WOD largo de gimnasia', 'sentadilla frontal pesada', etc."
+                        value={aiPrompt}
+                        onChange={(e) => setAiPrompt(e.target.value)}
+                      />
+                    </div>
+
+                    {aiError && (
+                      <div className="badge badge-danger" style={{ fontSize: '0.75rem', padding: '0.5rem', display: 'block', wordBreak: 'break-word', color: 'var(--color-danger)' }}>
+                        {aiError}
+                      </div>
+                    )}
+
+                    <button 
+                      type="button" 
+                      className="btn btn-primary" 
+                      style={{ width: '100%', fontSize: '0.85rem', gap: '0.5rem' }}
+                      onClick={handleGenerateWod}
+                      disabled={aiLoading}
+                    >
+                      {aiLoading ? 'Generando...' : 'Generar WOD con Gemini'}
+                    </button>
+                  </div>
+
+                  {/* Generated WOD Preview and Chat */}
+                  {generatedWodPreview && (
+                    <div style={{ marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-glass)' }}>
+                      <h5 style={{ color: 'var(--color-accent)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
+                        Propuesta Generada:
+                      </h5>
+                      <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '4px', fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '250px', overflowY: 'auto', marginBottom: '0.75rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <strong>Título: {generatedWodPreview.titulo}</strong>
+                        {generatedWodPreview.warmup?.habilitado && (
+                          <div>
+                            <span style={{ color: 'var(--color-accent)', fontWeight: 'bold' }}>1. Calentamiento:</span>
+                            <p style={{ margin: '0.1rem 0 0 0.5rem', whiteSpace: 'pre-line' }}>{generatedWodPreview.warmup.descripcion}</p>
+                          </div>
+                        )}
+                        {generatedWodPreview.strength?.habilitado && (
+                          <div>
+                            <span style={{ color: 'var(--color-primary)', fontWeight: 'bold' }}>2. Fuerza/Habilidad:</span>
+                            <p style={{ margin: '0.1rem 0 0 0.5rem', whiteSpace: 'pre-line' }}>{generatedWodPreview.strength.descripcion}</p>
+                          </div>
+                        )}
+                        {generatedWodPreview.conditioning?.habilitado && (
+                          <div>
+                            <span style={{ color: 'var(--color-text-main)', fontWeight: 'bold' }}>3. Conditioning (WOD):</span>
+                            <p style={{ margin: '0.1rem 0 0 0.5rem', whiteSpace: 'pre-line' }}>{generatedWodPreview.conditioning.descripcion}</p>
+                          </div>
+                        )}
+                        {generatedWodPreview.midline?.habilitado && (
+                          <div>
+                            <span style={{ color: 'var(--color-text-main)', fontWeight: 'bold' }}>4. Core / Accesorios:</span>
+                            <p style={{ margin: '0.1rem 0 0 0.5rem', whiteSpace: 'pre-line' }}>{generatedWodPreview.midline.descripcion}</p>
+                          </div>
+                        )}
+                        {generatedWodPreview.extra?.habilitado && (
+                          <div>
+                            <span style={{ color: 'var(--color-hyrox)', fontWeight: 'bold' }}>5. Extra / VO2 Max:</span>
+                            <p style={{ margin: '0.1rem 0 0 0.5rem', whiteSpace: 'pre-line' }}>{generatedWodPreview.extra.descripcion}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Modificaciones chat input */}
+                      <div className="form-group" style={{ marginBottom: '0.5rem' }}>
+                        <label className="form-label" style={{ fontSize: '0.75rem' }}>¿Quieres hacer algún cambio? (Chatea con la IA)</label>
+                        <div style={{ display: 'flex', gap: '0.35rem' }}>
+                          <input 
+                            type="text" 
+                            className="form-input" 
+                            style={{ padding: '0.35rem', fontSize: '0.8rem', flex: 1 }}
+                            placeholder="Ej: 'Quita el bloque de core' o 'Cambia el ejercicio'"
+                            value={chatMessage}
+                            onChange={(e) => setChatMessage(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') handleModifyWod(); }}
+                          />
+                          <button 
+                            type="button" 
+                            className="btn btn-secondary" 
+                            style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}
+                            onClick={handleModifyWod}
+                            disabled={aiLoading}
+                          >
+                            Modificar
+                          </button>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+                        <button 
+                          type="button" 
+                          className="btn btn-primary" 
+                          style={{ flex: 1, fontSize: '0.8rem', padding: '0.5rem' }}
+                          onClick={handleApplyWod}
+                        >
+                          Aplicar al Planificador
+                        </button>
+                        <button 
+                          type="button" 
+                          className="btn btn-secondary" 
+                          style={{ fontSize: '0.8rem', padding: '0.5rem' }}
+                          onClick={() => setGeneratedWodPreview(null)}
+                        >
+                          Descartar
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 {/* Botón para abrir el panel de nuevo ejercicio */}
                 <div className="glass-card" style={{ background: 'rgba(6, 182, 212, 0.03)' }}>
                   <h4 style={{ display: 'flex', gap: '0.25rem', alignItems: 'center', marginBottom: '0.5rem', color: 'var(--color-accent)' }}>
