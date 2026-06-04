@@ -4766,7 +4766,7 @@
           IMPORTANTE: La IA puede decidir libremente desactivar (habilitado: false) partes del WOD según el enfoque (por ejemplo, si el enfoque es puramente metabólico de VO2 Max largo, puede desactivar el bloque 'strength'). Responde ÚNICAMENTE con el objeto JSON válido. No uses bloques de código markdown como \`\`\`json ni agregues texto explicativo fuera del JSON.`;
 
           try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiApiKey}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -4818,7 +4818,7 @@
           Responde ÚNICAMENTE con el objeto JSON modificado, sin bloques de código markdown y sin explicaciones externas.`;
 
           try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiApiKey}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
