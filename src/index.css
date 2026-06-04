@@ -449,3 +449,22 @@ p {
   }
 }
 
+/* ========================================== */
+/*  Etiquetas Responsivas para Pestañas (Hito 13) */
+/* ========================================== */
+.tab-text-desktop {
+  display: inline;
+}
+.tab-text-mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .tab-text-desktop {
+    display: none;
+  }
+  .tab-text-mobile {
+    display: inline;
+  }
+}
+

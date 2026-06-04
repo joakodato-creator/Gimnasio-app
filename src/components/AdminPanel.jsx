@@ -416,21 +416,21 @@ export default function AdminPanel({ onUpdateUser }) {
           className={`btn ${subTab === 'caja' ? 'btn-primary' : 'btn-secondary'}`}
           style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}
         >
-          <CreditCard size={16} /> Caja & Carga de Créditos
+          <CreditCard size={16} /> <span className="tab-text-desktop">Caja & Carga de Créditos</span><span className="tab-text-mobile">Caja</span>
         </button>
         <button 
           onClick={() => setSubTab('asistencias')} 
           className={`btn ${subTab === 'asistencias' ? 'btn-primary' : 'btn-secondary'}`}
           style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}
         >
-          <Calendar size={16} /> Control de Asistencias (Turnos)
+          <Calendar size={16} /> <span className="tab-text-desktop">Control de Asistencias (Turnos)</span><span className="tab-text-mobile">Turnos</span>
         </button>
         <button 
           onClick={() => setSubTab('reportes')} 
           className={`btn ${subTab === 'reportes' ? 'btn-primary' : 'btn-secondary'}`}
           style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}
         >
-          <BarChart3 size={16} /> Reportes & Estadísticas
+          <BarChart3 size={16} /> <span className="tab-text-desktop">Reportes & Estadísticas</span><span className="tab-text-mobile">Estadísticas</span>
         </button>
       </div>
 

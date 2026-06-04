@@ -12,6 +12,21 @@ import {
 } from 'lucide-react';
 
 
+const getLocalDateString = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const formatLocalDate = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [activeTab, setActiveTab] = useState('wod'); // 'wod', 'booking', 'crossfit', 'hyrox', 'admin'
@@ -28,7 +43,7 @@ export default function App() {
   const [checkinResult, setCheckinResult] = useState(null);
   
   // Hito 2: Selector de WOD y Videos
-  const [selectedWodDate, setSelectedWodDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedWodDate, setSelectedWodDate] = useState(getLocalDateString());
   const [activeVideoUrl, setActiveVideoUrl] = useState(null);
   const [sliderPercentage, setSliderPercentage] = useState(75);
 
@@ -71,6 +86,52 @@ export default function App() {
     };
     initApp();
   }, []);
+
+  // URL Hash Routing (Hito 13 - Solución a navegación e historial)
+  useEffect(() => {
+    if (!currentUser) {
+      if (window.location.hash) {
+        window.location.hash = '';
+      }
+      return;
+    }
+
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      const allowedClientTabs = ['wod', 'booking', 'crossfit', 'hyrox', 'checkin'];
+      const allowedAdminTabs = ['admin', 'wod_planner', 'sports_monitor'];
+
+      if (currentUser.rol === 'cliente') {
+        if (allowedClientTabs.includes(hash)) {
+          setActiveTab(hash);
+        } else {
+          window.location.hash = 'wod';
+          setActiveTab('wod');
+        }
+      } else if (currentUser.rol === 'administrador') {
+        if (allowedAdminTabs.includes(hash)) {
+          setActiveTab(hash);
+        } else {
+          window.location.hash = 'admin';
+          setActiveTab('admin');
+        }
+      }
+    };
+
+    handleHashChange();
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [currentUser]);
+
+  // Sincronizar activeTab con window.location.hash
+  useEffect(() => {
+    if (currentUser && activeTab) {
+      if (window.location.hash.replace('#', '') !== activeTab) {
+        window.location.hash = activeTab;
+      }
+    }
+  }, [activeTab, currentUser]);
 
   const loadUserPRs = async () => {
     try {
@@ -245,7 +306,7 @@ export default function App() {
     : notifications.filter(n => n.cliente_id === currentUser?.id);
 
   // WOD de hoy
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getLocalDateString();
   const todayWod = wods.find(w => w.fecha === todayStr) || wods[0]; // fallback al último cargado
 
   if (!currentUser) {
@@ -571,19 +632,22 @@ export default function App() {
               onClick={() => setActiveTab('admin')} 
               className={`btn ${activeTab === 'admin' ? 'btn-primary' : 'btn-secondary'}`}
             >
-              Gestión Administrativa (Clientes & Caja)
+              <span className="tab-text-desktop">Gestión Administrativa (Clientes & Caja)</span>
+              <span className="tab-text-mobile">Admin</span>
             </button>
             <button 
               onClick={() => setActiveTab('wod_planner')} 
               className={`btn ${activeTab === 'wod_planner' ? 'btn-primary' : 'btn-secondary'}`}
             >
-              Programación Deportiva (WODs)
+              <span className="tab-text-desktop">Programación Deportiva (WODs)</span>
+              <span className="tab-text-mobile">WODs</span>
             </button>
             <button 
               onClick={() => setActiveTab('sports_monitor')} 
               className={`btn ${activeTab === 'sports_monitor' ? 'btn-primary' : 'btn-secondary'}`}
             >
-              Seguimiento Deportivo (RMs & HYROX)
+              <span className="tab-text-desktop">Seguimiento Deportivo (RMs & HYROX)</span>
+              <span className="tab-text-mobile">Seguimiento</span>
             </button>
           </div>
         )}
@@ -643,8 +707,8 @@ export default function App() {
                 return dayNames.map((name, i) => {
                   const d = new Date(monday);
                   d.setDate(monday.getDate() + i);
-                  const dateStr = d.toISOString().split('T')[0];
-                  const esHoy = dateStr === new Date().toISOString().split('T')[0];
+                  const dateStr = formatLocalDate(d);
+                  const esHoy = dateStr === getLocalDateString();
                   return (
                     <button
                       key={dateStr}
