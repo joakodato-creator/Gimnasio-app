@@ -4718,40 +4718,47 @@
 
           const catalogNames = exercisesCatalog.map(ex => ex.name).join(', ');
 
-          const prompt = `Eres un Entrenador de CrossFit Certificado (Nivel 3/4) experto en fisiología del deporte y periodización de mesociclos. Tu box cuenta con el siguiente catálogo de ejercicios técnicos oficiales: [${catalogNames}].
+          const prompt = `Eres un Entrenador de CrossFit Certificado (Nivel 3/4) y Especialista en Preparación Física Avanzada, experto en periodización deportiva y mesociclos. Tu box cuenta con el siguiente catálogo de ejercicios técnicos oficiales: [${catalogNames}].
           Genera un entrenamiento estructurado para la fecha actual (tipo de WOD: ${wodType}) en base a las siguientes configuraciones de entrenamiento:
           - Mesociclo de periodización: ${activeMesocycle} (donde 'fuerza' es fuerza máxima con bajas repeticiones >= 80% 1RM; 'volumen' es cargas moderadas con 8-12 reps; 'vo2_max' es foco en acondicionamiento metabólico cardiovascular y resistencia; 'deload' es descarga de baja intensidad; y 'peaking' es puesta a punto de alta intensidad).
           - Incluir entrenamiento específico de VO2 Max: ${includeVo2Max ? 'Sí, enfocado en ' + cardioType : 'No'}.
           - Indicación personalizada del Coach: ${aiPrompt || 'Ninguna'}.
+          
+          INSTRUCCIONES CLAVE DE REDACCIÓN (EXIGE MÁXIMO DETALLE):
+          1. warmup: Debe ser muy detallado. Divide la descripción en sub-secciones claras (por ejemplo, 'Fase 1: Movilidad articular activa', 'Fase 2: Activación general/cardio' y 'Fase 3: Calentamiento específico con barra vacía/aproximación'). Especifica repeticiones y tiempos exactos.
+          2. strength: Explica con minuciosidad las series de aproximación (warmup sets) y las series efectivas (working sets). Proporciona consejos técnicos (cues) específicos para el movimiento (ej: mantener espalda neutra, rodillas hacia afuera, etc.).
+          3. conditioning: Describe el WOD con lujo de detalles: especifica el formato (AMRAP/EMOM/RFT), la duración o límite de tiempo (Time Cap), los pesos sugeridos para hombres/mujeres (Rx y Scaled) y una estrategia recomendada de ritmo (pacing) para el atleta.
+          4. midline: Detalla los ejercicios auxiliares del core de forma estructurada con sus rondas y reps correspondientes.
+          5. extra: Si hay VO2 Max activo, describe un protocolo intervalado deportivo preciso (con distancias, tiempos de trabajo, zonas de esfuerzo e intervalos de descanso completo).
           
           Debes retornar un objeto JSON que siga EXACTAMENTE la siguiente estructura:
           {
             "titulo": "String corto y descriptivo del entrenamiento del día",
             "warmup": {
               "habilitado": true/false,
-              "descripcion": "Instrucciones detalladas de entrada en calor en español, enfocadas en movilidad y aproximación al WOD",
-              "ejercicios": []
+              "descripcion": "Instrucciones detalladas de entrada en calor en español, desglosadas por fases de movilidad, activación y calentamiento específico",
+              "ejercicios": ["Nombres exactos del catálogo vinculados"]
             },
             "strength": {
               "habilitado": true/false,
-              "descripcion": "Instrucciones detalladas del trabajo de fuerza o habilidad técnica en español. Si está habilitado, incluye series, repeticiones y porcentajes sugeridos de RM.",
+              "descripcion": "Instrucciones detalladas del trabajo de fuerza o habilidad técnica en español. Si está habilitado, incluye series de aproximación, series efectivas, repeticiones y porcentajes sugeridos de RM con consejos técnicos.",
               "ejercicios": [
                 { "nombre": "Nombre exacto del ejercicio que coincida con el catálogo (ej: 'Back Squat' o 'Snatch')", "porcentaje": 75, "reps": "5 sets x 3 reps" }
               ]
             },
             "conditioning": {
               "habilitado": true/false,
-              "descripcion": "Instrucciones completas del acondicionamiento (WOD principal) en español (ej: AMRAP, EMOM, RFT, Chipper, indicando tiempos, movimientos y pesos Rx).",
+              "descripcion": "Instrucciones completas del acondicionamiento (WOD principal) en español (ej: AMRAP, EMOM, RFT, Chipper, indicando tiempos, movimientos, pesos Rx y Scaled, y la estrategia de pacing).",
               "ejercicios": []
             },
             "midline": {
               "habilitado": true/false,
-              "descripcion": "Instrucciones de core, estabilidad abdominal y accesorios en español",
+              "descripcion": "Instrucciones de core, estabilidad abdominal y accesorios en español desglosados en sets y reps",
               "ejercicios": []
             },
             "extra": {
               "habilitado": true/false,
-              "descripcion": "Instrucciones de trabajo extra/cardio en español (si se seleccionó VO2 Max, diseña AQUÍ un entrenamiento específico e intenso de VO2 Max con máquinas o running, ej: intervalos de remo de 500m con tiempos de descanso idénticos Z5)",
+              "descripcion": "Instrucciones de trabajo extra/cardio en español (si se seleccionó VO2 Max, diseña AQUÍ un entrenamiento intervalado deportivo específico e intenso de VO2 Max con máquinas o running, detallando distancias, zonas de esfuerzo y descansos)",
               "ejercicios": []
             }
           }
