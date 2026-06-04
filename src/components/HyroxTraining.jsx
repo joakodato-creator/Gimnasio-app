@@ -381,7 +381,7 @@ export default function HyroxTraining({ user, onUpdateUser }) {
 
           {/* VISTA 1: Rutinas y Planes */}
           {activeTab === 'plan' && (
-            <div className="grid-3" style={{ gridTemplateColumns: '2fr 1fr' }}>
+            <div className="responsive-split" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 <div className="glass-card">
                   <h3 style={{ marginBottom: '1rem', color: 'var(--color-text-main)', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>

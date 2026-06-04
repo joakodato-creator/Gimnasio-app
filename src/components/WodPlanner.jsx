@@ -255,13 +255,13 @@ export default function WodPlanner() {
         </div>
       )}
 
-      <div className="grid-3" style={{ gridTemplateColumns: '2fr 1fr' }}>
+      <div className="responsive-split" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
         
         {/* Formulario Estructurado */}
         <div className="glass-card">
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.25rem' }}>
+            <div className="responsive-split" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.25rem' }}>
               <div className="form-group">
                 <label className="form-label">Título del Entrenamiento</label>
                 <input 

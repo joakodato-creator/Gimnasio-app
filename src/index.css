@@ -342,3 +342,110 @@ p {
     box-shadow: 0 0 20px rgba(190, 242, 100, 0.25);
   }
 }
+
+/* ========================================== */
+/*  Diseño Móvil y Optimizaciones (Hito 13)    */
+/* ========================================== */
+
+/* Clases de Grilla Responsivas que reemplazan estilos inline rígidos */
+.responsive-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.responsive-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.responsive-split {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  /* Reajuste de grids inline/flex a 1 columna */
+  .responsive-grid-3, 
+  .responsive-grid-2, 
+  .responsive-split {
+    grid-template-columns: 1fr !important;
+    gap: 1rem;
+  }
+
+  /* Ajustes generales del espaciado del contenedor */
+  main {
+    padding: 1rem 1rem 80px 1rem !important; /* Margen inferior para que no tape la barra móvil */
+  }
+
+  /* Ocultar botones de navegación superior para cliente */
+  .desktop-tabs {
+    display: none !important;
+  }
+
+  /* Ajustes de modales para pantallas chicas */
+  .modal-content {
+    padding: 1.5rem !important;
+    max-height: 85vh !important;
+    border-radius: var(--radius-md) !important;
+  }
+
+  /* Simplificar espaciados de tarjetas */
+  .glass-card {
+    padding: 1.25rem !important;
+  }
+}
+
+/* Barra de navegación inferior nativa para celulares */
+.mobile-nav-bar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-nav-bar {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: rgba(13, 18, 30, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border-glass);
+    justify-content: space-around;
+    align-items: center;
+    z-index: 999;
+    padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+  }
+
+  .mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-primary);
+    font-size: 0.7rem;
+    font-weight: 600;
+    transition: color var(--transition-fast), transform var(--transition-fast);
+    padding: 0.5rem;
+    flex: 1;
+    color: var(--color-text-muted);
+  }
+
+  .mobile-nav-item:active {
+    transform: scale(0.92);
+  }
+
+  .mobile-nav-item span {
+    font-size: 0.65rem;
+  }
+}
+

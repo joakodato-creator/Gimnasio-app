@@ -118,7 +118,7 @@ export default function SportsMonitor() {
       )}
 
       {selectedClient && targetClientObj && (
-        <div className="grid-2" style={{ gridTemplateColumns: '1fr 1fr' }}>
+        <div className="responsive-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
           
           {/* COLUMNA 1: CrossFit RMs y Marcas de Fuerza */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>

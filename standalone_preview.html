@@ -219,6 +219,108 @@
       @media (max-width: 768px) {
         .grid-2, .grid-3 { grid-template-columns: 1fr; }
       }
+
+      /* Clases de Grilla Responsivas que reemplazan estilos inline rígidos */
+      .responsive-grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+      }
+
+      .responsive-grid-2 {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+      }
+
+      .responsive-split {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+      }
+
+      @media (max-width: 768px) {
+        /* Reajuste de grids inline/flex a 1 columna */
+        .responsive-grid-3, 
+        .responsive-grid-2, 
+        .responsive-split {
+          grid-template-columns: 1fr !important;
+          gap: 1rem;
+        }
+
+        /* Ajustes generales del espaciado del contenedor */
+        main {
+          padding: 1rem 1rem 80px 1rem !important; /* Margen inferior para que no tape la barra móvil */
+        }
+
+        /* Ocultar botones de navegación superior para cliente */
+        .desktop-tabs {
+          display: none !important;
+        }
+
+        /* Ajustes de modales para pantallas chicas */
+        .modal-content {
+          padding: 1.5rem !important;
+          max-height: 85vh !important;
+          border-radius: var(--radius-md) !important;
+        }
+
+        /* Simplificar espaciados de tarjetas */
+        .glass-card {
+          padding: 1.25rem !important;
+        }
+      }
+
+      /* Barra de navegación inferior nativa para celulares */
+      .mobile-nav-bar {
+        display: none;
+      }
+
+      @media (max-width: 768px) {
+        .mobile-nav-bar {
+          display: flex;
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 64px;
+          background: rgba(13, 18, 30, 0.95);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border-top: 1px solid var(--border-glass);
+          justify-content: space-around;
+          align-items: center;
+          z-index: 999;
+          padding-bottom: env(safe-area-inset-bottom);
+          box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .mobile-nav-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 0.25rem;
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-family: var(--font-primary);
+          font-size: 0.7rem;
+          font-weight: 600;
+          transition: color var(--transition-fast), transform var(--transition-fast);
+          padding: 0.5rem;
+          flex: 1;
+          color: var(--color-text-muted);
+        }
+
+        .mobile-nav-item:active {
+          transform: scale(0.92);
+        }
+
+        .mobile-nav-item span {
+          font-size: 0.65rem;
+        }
+      }
     </style>
   </head>
   <body>
@@ -528,6 +630,16 @@
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                 <polyline points="7 10 12 15 17 10" />
                 <line x1="12" x2="12" y1="15" y2="3" />
+              </svg>
+            );
+          case 'qrcode':
+            return (
+              <svg {...svgProps}>
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+                <path d="M7 17h.01M17 7h.01M7 7h.01M17 17h.01M17 14h.01M14 17h.01M7 10h.01M10 7h.01" />
               </svg>
             );
           default:
@@ -2213,7 +2325,7 @@
                 </div>
 
                 {activeTab === 'plan' && template.weeks && (
-                  <div className="grid-3" style={{ gridTemplateColumns: '2fr 1fr' }}>
+                  <div className="responsive-split" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
                     <div className="glass-card">
                       <div style={{ display: 'flex', gap: '0.25rem', marginBottom: '1rem', overflowX: 'auto' }}>
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(w => (
@@ -4495,13 +4607,13 @@
               </div>
             )}
 
-            <div className="grid-3" style={{ gridTemplateColumns: '2fr 1fr' }}>
+            <div className="responsive-split" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
               
               {/* Formulario Estructurado */}
               <div className="glass-card">
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                   
-                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.25rem' }}>
+                  <div className="responsive-split" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.25rem' }}>
                     <div className="form-group">
                       <label className="form-label">Título del Entrenamiento</label>
                       <input 
@@ -5459,7 +5571,7 @@
 
               {/* Navegación por Pestañas del Cliente */}
               {currentUser.rol === 'cliente' && (
-                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', overflowX: 'auto' }}>
+                <div className="desktop-tabs" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', overflowX: 'auto' }}>
                   <button onClick={() => setActiveTab('wod')} className={`btn ${activeTab === 'wod' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>WOD Diario</button>
                   <button onClick={() => setActiveTab('booking')} className={`btn ${activeTab === 'booking' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>Reservar Turno</button>
                   <button onClick={() => setActiveTab('crossfit')} className={`btn ${activeTab === 'crossfit' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>CrossFit / RMs</button>
@@ -5564,7 +5676,7 @@
                     const extra = typeof currentWod.extra === 'object' && currentWod.extra !== null ? currentWod.extra : { habilitado: !!currentWod.extra, descripcion: currentWod.extra || '', ejercicios: [] };
 
                     return (
-                      <div className="grid-3" style={{ gridTemplateColumns: '2fr 1fr' }}>
+                      <div className="responsive-split" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
                         <div className="glass-card" style={{ borderLeft: '4px solid var(--color-primary)' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-glass)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
                             <div>
@@ -6160,6 +6272,52 @@
             >
               <p>© 2026 Gimnasio Performance S.A. | Todos los derechos reservados. Desarrollado en modo LocalStorage.</p>
             </footer>
+
+            {/* Mobile Bottom Navigation Bar (Hito 13 - Mobile Optimization) */}
+            {currentUser && currentUser.rol === 'cliente' && (
+              <div className="mobile-nav-bar">
+                <button 
+                  onClick={() => setActiveTab('wod')} 
+                  className="mobile-nav-item"
+                  style={{ color: activeTab === 'wod' ? 'var(--color-primary)' : 'var(--color-text-muted)' }}
+                >
+                  <Icon name="dumbbell" size={20} />
+                  <span>WOD</span>
+                </button>
+                <button 
+                  onClick={() => setActiveTab('booking')} 
+                  className="mobile-nav-item"
+                  style={{ color: activeTab === 'booking' ? 'var(--color-primary)' : 'var(--color-text-muted)' }}
+                >
+                  <Icon name="calendar" size={20} />
+                  <span>Reservar</span>
+                </button>
+                <button 
+                  onClick={() => setActiveTab('crossfit')} 
+                  className="mobile-nav-item"
+                  style={{ color: activeTab === 'crossfit' ? 'var(--color-primary)' : 'var(--color-text-muted)' }}
+                >
+                  <Icon name="trophy" size={20} />
+                  <span>RMs</span>
+                </button>
+                <button 
+                  onClick={() => setActiveTab('hyrox')} 
+                  className="mobile-nav-item"
+                  style={{ color: activeTab === 'hyrox' ? 'var(--color-hyrox)' : 'var(--color-text-muted)' }}
+                >
+                  <Icon name="flame" size={20} />
+                  <span>HYROX</span>
+                </button>
+                <button 
+                  onClick={() => setActiveTab('checkin')} 
+                  className="mobile-nav-item"
+                  style={{ color: activeTab === 'checkin' ? 'var(--color-accent)' : 'var(--color-text-muted)' }}
+                >
+                  <Icon name="qrcode" size={20} />
+                  <span>Check-In</span>
+                </button>
+              </div>
+            )}
           </div>
         );
       }

@@ -8,7 +8,7 @@ import WodPlanner from './components/WodPlanner';
 import SportsMonitor from './components/SportsMonitor';
 import { 
   Dumbbell, Calendar, Percent, Trophy, Users, LogOut, Bell, 
-  ShieldAlert, FileText, CheckCircle, Flame, MessageSquare, Info, Video
+  ShieldAlert, FileText, CheckCircle, Flame, MessageSquare, Info, Video, QrCode
 } from 'lucide-react';
 
 
@@ -590,7 +590,7 @@ export default function App() {
 
         {/* Navegación por Pestañas del Cliente */}
         {currentUser.rol === 'cliente' && (
-          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+          <div className="desktop-tabs" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
             <button onClick={() => setActiveTab('wod')} className={`btn ${activeTab === 'wod' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>WOD Diario</button>
             <button onClick={() => setActiveTab('booking')} className={`btn ${activeTab === 'booking' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>Reservar Turno</button>
             <button onClick={() => setActiveTab('crossfit')} className={`btn ${activeTab === 'crossfit' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>CrossFit / RMs</button>
@@ -695,7 +695,7 @@ export default function App() {
               const extra = typeof currentWod.extra === 'object' && currentWod.extra !== null ? currentWod.extra : { habilitado: !!currentWod.extra, descripcion: currentWod.extra || '', ejercicios: [] };
 
               return (
-                <div className="grid-3" style={{ gridTemplateColumns: '2fr 1fr' }}>
+                <div className="responsive-split" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
                   <div className="glass-card" style={{ borderLeft: '4px solid var(--color-primary)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-glass)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
                       <div>
@@ -1294,6 +1294,52 @@ export default function App() {
       >
         <p>© 2026 Gimnasio Performance S.A. | Todos los derechos reservados. Desarrollado en modo LocalStorage.</p>
       </footer>
+
+      {/* Mobile Bottom Navigation Bar (Hito 13 - Mobile Optimization) */}
+      {currentUser && currentUser.rol === 'cliente' && (
+        <div className="mobile-nav-bar">
+          <button 
+            onClick={() => setActiveTab('wod')} 
+            className="mobile-nav-item"
+            style={{ color: activeTab === 'wod' ? 'var(--color-primary)' : 'var(--color-text-muted)' }}
+          >
+            <Dumbbell size={20} />
+            <span>WOD</span>
+          </button>
+          <button 
+            onClick={() => setActiveTab('booking')} 
+            className="mobile-nav-item"
+            style={{ color: activeTab === 'booking' ? 'var(--color-primary)' : 'var(--color-text-muted)' }}
+          >
+            <Calendar size={20} />
+            <span>Reservar</span>
+          </button>
+          <button 
+            onClick={() => setActiveTab('crossfit')} 
+            className="mobile-nav-item"
+            style={{ color: activeTab === 'crossfit' ? 'var(--color-primary)' : 'var(--color-text-muted)' }}
+          >
+            <Trophy size={20} />
+            <span>RMs</span>
+          </button>
+          <button 
+            onClick={() => setActiveTab('hyrox')} 
+            className="mobile-nav-item"
+            style={{ color: activeTab === 'hyrox' ? 'var(--color-hyrox)' : 'var(--color-text-muted)' }}
+          >
+            <Flame size={20} />
+            <span>HYROX</span>
+          </button>
+          <button 
+            onClick={() => setActiveTab('checkin')} 
+            className="mobile-nav-item"
+            style={{ color: activeTab === 'checkin' ? 'var(--color-accent)' : 'var(--color-text-muted)' }}
+          >
+            <QrCode size={20} />
+            <span>Check-In</span>
+          </button>
+        </div>
+      )}
 
     </div>
   );
