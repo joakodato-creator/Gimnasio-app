@@ -418,6 +418,22 @@ export const db = {
     return mapUserFromDb(data);
   },
 
+  updateUserProfile: async (userId, profileData) => {
+    const { error } = await supabase
+      .from('users')
+      .update({ 
+        name: profileData.name, 
+        email: profileData.email, 
+        telefono: profileData.telefono,
+        password: profileData.password 
+      })
+      .eq('id', userId);
+    if (error) throw error;
+
+    const { data } = await supabase.from('users').select('*').eq('id', userId).single();
+    return mapUserFromDb(data);
+  },
+
   updateUserConsent: async (userId, consentStatus) => {
     const { error } = await supabase
       .from('users')

@@ -8,7 +8,8 @@ import WodPlanner from './components/WodPlanner';
 import SportsMonitor from './components/SportsMonitor';
 import { 
   Dumbbell, Calendar, Percent, Trophy, Users, LogOut, Bell, 
-  ShieldAlert, FileText, CheckCircle, Flame, MessageSquare, Info, Video, QrCode
+  ShieldAlert, FileText, CheckCircle, Flame, MessageSquare, Info, Video, QrCode,
+  User
 } from 'lucide-react';
 
 
@@ -41,6 +42,63 @@ export default function App() {
   // Checkin & Scanner (Hito 10)
   const [showCheckinModal, setShowCheckinModal] = useState(false);
   const [checkinResult, setCheckinResult] = useState(null);
+
+  // Perfil de Usuario (Hito 14)
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [profileName, setProfileName] = useState('');
+  const [profileEmail, setProfileEmail] = useState('');
+  const [profilePhone, setProfilePhone] = useState('');
+  const [profilePassword, setProfilePassword] = useState('');
+  const [profileError, setProfileError] = useState('');
+  const [profileSuccess, setProfileSuccess] = useState('');
+
+  const handleOpenProfileModal = () => {
+    if (currentUser) {
+      setProfileName(currentUser.name || '');
+      setProfileEmail(currentUser.email || '');
+      setProfilePhone(currentUser.telefono || '');
+      setProfilePassword(currentUser.password || '');
+    }
+    setProfileError('');
+    setProfileSuccess('');
+    setShowProfileModal(true);
+  };
+
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    setProfileError('');
+    setProfileSuccess('');
+    
+    if (!profileName.trim()) {
+      setProfileError("El nombre completo no puede estar vacío.");
+      return;
+    }
+    if (!profileEmail.trim() || !profileEmail.includes('@')) {
+      setProfileError("Por favor ingresa un correo electrónico válido.");
+      return;
+    }
+    if (profilePassword.length < 3) {
+      setProfileError("La contraseña debe tener al menos 3 caracteres.");
+      return;
+    }
+    
+    try {
+      const updatedUser = await db.updateUserProfile(currentUser.id, {
+        name: profileName.trim(),
+        email: profileEmail.trim(),
+        telefono: profilePhone.trim(),
+        password: profilePassword
+      });
+      setCurrentUser(updatedUser);
+      setProfileSuccess("Datos personales actualizados con éxito.");
+      setTimeout(() => {
+        setShowProfileModal(false);
+        setProfileSuccess('');
+      }, 1500);
+    } catch (err) {
+      setProfileError(`Error al actualizar perfil: ${err.message}`);
+    }
+  };
   
   // Hito 2: Selector de WOD y Videos
   const [selectedWodDate, setSelectedWodDate] = useState(getLocalDateString());
@@ -527,6 +585,16 @@ export default function App() {
               )}
             </div>
 
+            {/* Botón de Perfil */}
+            <button 
+              onClick={handleOpenProfileModal} 
+              className="btn btn-secondary" 
+              style={{ padding: '0.5rem', borderRadius: '50%', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              title="Mi Perfil / Datos Personales"
+            >
+              <User size={18} />
+            </button>
+
             {/* Centro de notificaciones */}
             <div style={{ position: 'relative' }}>
               <button 
@@ -674,6 +742,38 @@ export default function App() {
         )}
 
         {/* CONTENIDOS DE LAS PESTAÑAS */}
+
+        {/* Aviso de Créditos Bajos (5, 2 o menos) para Cliente */}
+        {currentUser && currentUser.rol === 'cliente' && currentUser.creditos_disponibles <= 5 && (
+          <div 
+            className="glass-card" 
+            style={{ 
+              borderLeft: `4px solid ${currentUser.creditos_disponibles <= 2 ? 'var(--color-danger)' : 'var(--color-warning)'}`, 
+              background: currentUser.creditos_disponibles <= 2 ? 'rgba(239, 68, 68, 0.05)' : 'rgba(245, 158, 11, 0.05)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1rem',
+              padding: '1.25rem 1.5rem',
+              marginBottom: '1.5rem'
+            }}
+          >
+            <div style={{ display: 'inline-flex', background: currentUser.creditos_disponibles <= 2 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)', padding: '0.75rem', borderRadius: '50%', color: currentUser.creditos_disponibles <= 2 ? 'var(--color-danger)' : 'var(--color-warning)', flexShrink: 0 }}>
+              <ShieldAlert size={24} />
+            </div>
+            <div>
+              <h4 style={{ color: currentUser.creditos_disponibles <= 2 ? 'var(--color-danger)' : 'var(--color-warning)', fontSize: '1.1rem', fontWeight: '700', margin: 0 }}>
+                {currentUser.creditos_disponibles <= 0 
+                  ? '¡Sin Créditos Disponibles!' 
+                  : `¡Quedan pocos créditos: ${currentUser.creditos_disponibles} restantes!`}
+              </h4>
+              <p style={{ fontSize: '0.85rem', marginTop: '0.25rem', margin: 0, color: 'var(--color-text-muted)' }}>
+                {currentUser.creditos_disponibles <= 0
+                  ? 'Tu saldo ha llegado a 0. Comunícate con la administración para renovar tu abono y seguir reservando clases.'
+                  : `Te sugerimos realizar la recarga a la brevedad para asegurar tu cupo en las próximas clases.`}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* 1. WOD de Hoy (Solo Cliente) */}
         {currentUser.rol === 'cliente' && activeTab === 'wod' && (
@@ -1352,6 +1452,103 @@ export default function App() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* 4. Modal de Editar Perfil (Hito 14) */}
+      {showProfileModal && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '450px', padding: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0, color: 'var(--color-primary)' }}>
+                <User size={20} /> Mis Datos Personales
+              </h3>
+              <button 
+                onClick={() => setShowProfileModal(false)} 
+                className="btn btn-secondary" 
+                style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div className="form-group">
+                <label className="form-label">Nombre Completo</label>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  value={profileName} 
+                  onChange={(e) => setProfileName(e.target.value)} 
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Correo Electrónico</label>
+                <input 
+                  type="email" 
+                  className="form-input" 
+                  value={profileEmail} 
+                  onChange={(e) => setProfileEmail(e.target.value)} 
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Teléfono / WhatsApp</label>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  placeholder="Ej: +54911..."
+                  value={profilePhone} 
+                  onChange={(e) => setProfilePhone(e.target.value)} 
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Contraseña</label>
+                <input 
+                  type="password" 
+                  className="form-input" 
+                  placeholder="Nueva contraseña"
+                  value={profilePassword} 
+                  onChange={(e) => setProfilePassword(e.target.value)} 
+                  required
+                />
+              </div>
+
+              {profileError && (
+                <div className="badge badge-danger" style={{ width: '100%', padding: '0.6rem', fontSize: '0.8rem', justifyContent: 'center' }}>
+                  {profileError}
+                </div>
+              )}
+
+              {profileSuccess && (
+                <div className="badge badge-success" style={{ width: '100%', padding: '0.6rem', fontSize: '0.8rem', justifyContent: 'center' }}>
+                  {profileSuccess}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <button 
+                  type="submit" 
+                  className="btn btn-primary" 
+                  style={{ flex: 1, padding: '0.6rem' }}
+                >
+                  Guardar Cambios
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => setShowProfileModal(false)} 
+                  className="btn btn-secondary" 
+                  style={{ flex: 1, padding: '0.6rem' }}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
