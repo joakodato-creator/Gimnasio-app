@@ -182,7 +182,7 @@ export default function BookingCalendar({ user, onUpdateUser, openConsentModal }
         </div>
 
         {/* Pestañas de días de la semana */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.5rem', marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
           {(() => {
             const shortDayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
             return DAYS.map(day => (

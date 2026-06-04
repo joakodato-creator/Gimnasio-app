@@ -1722,7 +1722,7 @@
                 <span>Semana: <strong>{activeDate}</strong></span>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.5rem', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
                 {(() => {
                   const shortDayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
                   return DAYS.map(day => (
