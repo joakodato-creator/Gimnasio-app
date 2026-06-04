@@ -138,6 +138,20 @@ export default function App() {
         const loadedClasses = await db.getClasses();
         setClasses(loadedClasses);
 
+        // Restaurar sesión de localStorage
+        const cachedUserId = localStorage.getItem('gym_user_id');
+        if (cachedUserId) {
+          const allUsers = await db.getUsers();
+          const user = allUsers.find(u => u.id === cachedUserId);
+          if (user) {
+            setCurrentUser(user);
+            if (user.rol === 'administrador') {
+              setActiveTab('admin');
+            } else {
+              setActiveTab('wod');
+            }
+          }
+        }
       } catch (err) {
         console.error("Error initializing app:", err);
       }
@@ -219,6 +233,7 @@ export default function App() {
       
       if (user) {
         setCurrentUser(user);
+        localStorage.setItem('gym_user_id', user.id);
         setLoginError('');
         
         // Si es administrador, mandarlo al panel admin
@@ -271,6 +286,7 @@ export default function App() {
       setIsRegistering(false);
 
       setCurrentUser(newUser);
+      localStorage.setItem('gym_user_id', newUser.id);
       setActiveTab('wod');
       setShowConsentModal(true);
       setLoginError('');
@@ -302,6 +318,7 @@ export default function App() {
     try {
       const updatedUser = await db.updateUserPassword(currentUser.id, newPassVal);
       setCurrentUser(updatedUser);
+      localStorage.setItem('gym_user_id', updatedUser.id);
       setNewPassVal('');
       setConfirmPassVal('');
       setResetPassError('');
@@ -318,6 +335,7 @@ export default function App() {
 
   const handleLogout = () => {
     setCurrentUser(null);
+    localStorage.removeItem('gym_user_id');
     setUsername('');
     setPassword('');
     setActiveTab('wod');

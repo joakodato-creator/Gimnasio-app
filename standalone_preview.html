@@ -5366,7 +5366,20 @@
               const loadedClasses = await db.getClasses();
               setClasses(loadedClasses);
               
-
+              // Restaurar sesión de localStorage
+              const cachedUserId = localStorage.getItem('gym_user_id');
+              if (cachedUserId) {
+                const allUsers = await db.getUsers();
+                const user = allUsers.find(u => u.id === cachedUserId);
+                if (user) {
+                  setCurrentUser(user);
+                  if (user.rol === 'administrador') {
+                    setActiveTab('admin');
+                  } else {
+                    setActiveTab('wod');
+                  }
+                }
+              }
             } catch(err) {
               console.error(err);
             }
@@ -5448,6 +5461,7 @@
             
             if (user) {
               setCurrentUser(user);
+              localStorage.setItem('gym_user_id', user.id);
               setLoginError('');
               if (user.rol === 'administrador') {
                 setActiveTab('admin');
@@ -5488,6 +5502,7 @@
             setRegName(''); setRegUsername(''); setRegPassword(''); setRegEmail(''); setRegPhone('');
             setIsRegistering(false);
             setCurrentUser(newUser);
+            localStorage.setItem('gym_user_id', newUser.id);
             setActiveTab('wod');
             setShowConsentModal(true);
             setLoginError('');
@@ -5518,6 +5533,7 @@
           try {
             const updatedUser = await db.updateUserPassword(currentUser.id, newPassVal);
             setCurrentUser(updatedUser);
+            localStorage.setItem('gym_user_id', updatedUser.id);
             setNewPassVal(''); setConfirmPassVal(''); setResetPassError('');
             if (!updatedUser.consent) setShowConsentModal(true);
           } catch (err) {
@@ -5528,6 +5544,7 @@
 
         const handleLogout = () => {
           setCurrentUser(null);
+          localStorage.removeItem('gym_user_id');
           setUsername('');
           setPassword('');
           setActiveTab('wod');
