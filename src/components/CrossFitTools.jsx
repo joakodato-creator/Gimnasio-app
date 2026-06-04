@@ -121,7 +121,7 @@ export default function CrossFitTools({ user, onReloadPRs }) {
         <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', color: 'var(--color-primary)' }}>
           <Percent size={24} /> Calculadora de Porcentajes de Fuerza (RM)
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+        <div className="responsive-grid-2" style={{ marginBottom: '1.5rem' }}>
           <div className="form-group">
             <label className="form-label">Ejercicio de Referencia</label>
             <select 
@@ -202,7 +202,7 @@ export default function CrossFitTools({ user, onReloadPRs }) {
               </select>
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="responsive-grid-2" style={{ gap: '1rem' }}>
               <div className="form-group">
                 <label className="form-label">Peso (kg)</label>
                 <input 
