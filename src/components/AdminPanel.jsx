@@ -430,14 +430,14 @@ export default function AdminPanel({ onUpdateUser }) {
           className={`btn ${subTab === 'reportes' ? 'btn-primary' : 'btn-secondary'}`}
           style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}
         >
-          <BarChart3 size={16} /> <span className="tab-text-desktop">Reportes & Estadísticas</span><span className="tab-text-mobile">Estadísticas</span>
+          <BarChart3 size={16} /> <span className="tab-text-desktop">Reportes & Estadísticas</span><span className="tab-text-mobile">Reportes</span>
         </button>
       </div>
 
       {subTab === 'caja' && (
         <>
           {/* Indicadores Financieros rápidos */}
-          <div className="grid-3" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+          <div className="grid-3">
             <div className="glass-card" style={{ borderLeft: '4px solid var(--color-success)' }}>
               <span style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>Caja Registrada (Total Histórico)</span>
               <h2 style={{ fontSize: '2rem', marginTop: '0.25rem', color: 'var(--color-success)' }}>
@@ -1359,7 +1359,7 @@ export default function AdminPanel({ onUpdateUser }) {
           </div>
 
           {/* KPIs Principales del Período */}
-          <div className="grid-3" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+          <div className="grid-3">
             <div className="glass-card" style={{ borderLeft: '4px solid var(--color-success)' }}>
               <span style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>Ingresos del Período</span>
               <h2 style={{ fontSize: '2.2rem', marginTop: '0.25rem', color: 'var(--color-success)' }}>

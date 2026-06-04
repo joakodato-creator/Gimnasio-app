@@ -459,12 +459,19 @@ p {
   display: none;
 }
 
+.hide-mobile {
+  display: inline-block;
+}
+
 @media (max-width: 768px) {
   .tab-text-desktop {
     display: none;
   }
   .tab-text-mobile {
     display: inline;
+  }
+  .hide-mobile {
+    display: none !important;
   }
 }
 

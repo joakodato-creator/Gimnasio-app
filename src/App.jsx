@@ -517,7 +517,7 @@ export default function App() {
           {/* Estado del usuario logueado */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', fontSize: '0.85rem' }}>
-              <span style={{ fontWeight: '600' }}>{currentUser.name}</span>
+              <span style={{ fontWeight: '600' }} className="hide-mobile">{currentUser.name}</span>
               {currentUser.rol === 'cliente' ? (
                 <span style={{ color: 'var(--color-primary)', fontSize: '0.75rem', fontWeight: '500' }}>
                   {currentUser.creditos_disponibles} Créditos disp.
