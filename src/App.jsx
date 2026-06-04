@@ -203,32 +203,6 @@ export default function App() {
     }
   };
 
-  const handleDemoLogin = async (demoUsername) => {
-    try {
-      const allUsers = await db.getUsers();
-      const user = allUsers.find(u => u.username === demoUsername);
-      if (user) {
-        setCurrentUser(user);
-        setLoginError('');
-        if (user.rol === 'administrador') {
-          setActiveTab('admin');
-        } else {
-          setActiveTab('wod');
-          if (!user.consent) {
-            setShowConsentModal(true);
-          }
-        }
-        
-        const loadedNots = await db.getNotifications();
-        setNotifications(loadedNots);
-        const loadedPRs = await db.getPRs();
-        setPrs(loadedPRs);
-        await loadAppBookings();
-      }
-    } catch (err) {
-      setLoginError(err.message);
-    }
-  };
 
   const handleLogout = () => {
     setCurrentUser(null);
@@ -405,21 +379,6 @@ export default function App() {
             </form>
           )}
 
-          {/* Selector rápido para pruebas */}
-          <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border-glass)', paddingTop: '1.5rem' }}>
-            <p style={{ fontSize: '0.8rem', textAlign: 'center', marginBottom: '1rem' }}>Ingreso rápido para demostración (Demo):</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <button onClick={() => handleDemoLogin('gestor')} className="btn btn-secondary" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
-                Entrar como Coach / Gestor (Admin)
-              </button>
-              <button onClick={() => handleDemoLogin('lucas')} className="btn btn-secondary" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
-                Entrar como Lucas (Cliente con Apto Médico)
-              </button>
-              <button onClick={() => handleDemoLogin('sofia')} className="btn btn-secondary" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
-                Entrar como Sofía (Cliente Pendiente Apto y 2 Créditos)
-              </button>
-            </div>
-          </div>
 
         </div>
       </div>
