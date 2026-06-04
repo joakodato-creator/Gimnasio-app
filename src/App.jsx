@@ -866,7 +866,7 @@ export default function App() {
                                       </div>
 
                                       {/* Slider interactivo */}
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.25rem' }}>
+                                      <div className="responsive-slider-container">
                                         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                           <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>Calcular %:</span>
                                           <input 
