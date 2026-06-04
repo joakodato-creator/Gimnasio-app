@@ -377,12 +377,7 @@ p {
 
   /* Ajustes generales del espaciado del contenedor */
   main {
-    padding: 1rem 1rem 80px 1rem !important; /* Margen inferior para que no tape la barra móvil */
-  }
-
-  /* Ocultar botones de navegación superior para cliente */
-  .desktop-tabs {
-    display: none !important;
+    padding: 1rem 1rem 2rem 1rem !important;
   }
 
   /* Ajustes de modales para pantallas chicas */
