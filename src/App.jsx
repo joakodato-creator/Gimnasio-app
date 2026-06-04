@@ -515,7 +515,7 @@ export default function App() {
           </div>
 
           {/* Estado del usuario logueado */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          <div className="header-user-status">
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', fontSize: '0.85rem' }}>
               <span style={{ fontWeight: '600' }} className="hide-mobile">{currentUser.name}</span>
               {currentUser.rol === 'cliente' ? (
@@ -714,7 +714,9 @@ export default function App() {
                 monday.setDate(today.getDate() + mondayOffset);
                 
                 const dayNames = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+                const shortDayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
                 return dayNames.map((name, i) => {
+                  const shortName = shortDayNames[i];
                   const d = new Date(monday);
                   d.setDate(monday.getDate() + i);
                   const dateStr = formatLocalDate(d);
@@ -723,16 +725,15 @@ export default function App() {
                     <button
                       key={dateStr}
                       onClick={() => { setSelectedWodDate(dateStr); setSliderPercentage(75); }}
-                      className={`btn ${selectedWodDate === dateStr ? 'btn-primary' : 'btn-secondary'}`}
+                      className={`btn weekday-btn ${selectedWodDate === dateStr ? 'btn-primary' : 'btn-secondary'}`}
                       style={{
-                        flex: 1,
-                        minWidth: '95px',
                         border: esHoy && selectedWodDate !== dateStr ? '1px solid var(--color-primary)' : undefined,
-                        padding: '0.5rem 0.25rem',
-                        fontSize: '0.85rem'
                       }}
                     >
-                      <div style={{ fontWeight: '700' }}>{name}</div>
+                      <div style={{ fontWeight: '700' }}>
+                        <span className="tab-text-desktop">{name}</span>
+                        <span className="tab-text-mobile">{shortName}</span>
+                      </div>
                       <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>{dateStr.substring(5)}</div>
                     </button>
                   );

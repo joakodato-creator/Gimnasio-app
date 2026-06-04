@@ -470,3 +470,29 @@ p {
   }
 }
 
+/* Estado del usuario y alineación del Header (Hito 13) */
+.header-user-status {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .header-user-status {
+    gap: 0.5rem !important;
+  }
+}
+
+/* Botones de días de la semana (Hito 13) */
+.weekday-btn {
+  flex: 1;
+  min-width: 95px;
+}
+
+@media (max-width: 768px) {
+  .weekday-btn {
+    min-width: 60px !important;
+    padding: 0.4rem 0.25rem !important;
+  }
+}
+
