@@ -183,16 +183,19 @@ export default function BookingCalendar({ user, onUpdateUser, openConsentModal }
 
         {/* Pestañas de días de la semana */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.5rem', marginBottom: '2rem' }}>
-          {DAYS.map(day => (
-            <button
-              key={day.idx}
-              className={`btn ${selectedDayIdx === day.idx ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ padding: '0.75rem 0.25rem', fontSize: '0.85rem' }}
-              onClick={() => setSelectedDayIdx(day.idx)}
-            >
-              {day.name}
-            </button>
-          ))}
+          {(() => {
+            const shortDayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+            return DAYS.map(day => (
+              <button
+                key={day.idx}
+                className={`btn weekday-btn ${selectedDayIdx === day.idx ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => setSelectedDayIdx(day.idx)}
+              >
+                <span className="tab-text-desktop">{day.name}</span>
+                <span className="tab-text-mobile">{shortDayNames[day.idx - 1]}</span>
+              </button>
+            ));
+          })()}
         </div>
 
         {/* Listado de turnos/horarios */}

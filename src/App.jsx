@@ -507,7 +507,7 @@ export default function App() {
           zIndex: 100
         }}
       >
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '1rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="header-container">
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }} onClick={() => setActiveTab(currentUser.rol === 'administrador' ? 'admin' : 'wod')}>
             <Dumbbell color="var(--color-primary)" size={24} />
@@ -520,7 +520,7 @@ export default function App() {
               <span style={{ fontWeight: '600' }} className="hide-mobile">{currentUser.name}</span>
               {currentUser.rol === 'cliente' ? (
                 <span style={{ color: 'var(--color-primary)', fontSize: '0.75rem', fontWeight: '500' }}>
-                  {currentUser.creditos_disponibles} Créditos disp.
+                  {currentUser.creditos_disponibles} <span className="tab-text-desktop">Créditos disp.</span><span className="tab-text-mobile">Créd.</span>
                 </span>
               ) : (
                 <span className="badge badge-primary" style={{ fontSize: '0.65rem', padding: '0.1rem 0.5rem' }}>ADMINISTRADOR</span>
@@ -602,12 +602,12 @@ export default function App() {
                 {currentUser.consent ? (
                   <>
                     <CheckCircle size={14} color="var(--color-success)" />
-                    <span style={{ color: 'var(--color-success)' }}>Apto Médico</span>
+                    <span style={{ color: 'var(--color-success)' }} className="hide-mobile">Apto Médico</span>
                   </>
                 ) : (
                   <>
                     <ShieldAlert size={14} color="var(--color-danger)" />
-                    <span style={{ color: 'var(--color-danger)' }}>Sin Apto</span>
+                    <span style={{ color: 'var(--color-danger)' }} className="hide-mobile">Sin Apto</span>
                   </>
                 )}
               </button>

@@ -365,6 +365,22 @@
           padding: 0.4rem 0.25rem !important;
         }
       }
+
+      /* Contenedor del Header responsivo (Hito 13) */
+      .header-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      @media (max-width: 768px) {
+        .header-container {
+          padding: 0.75rem 0.75rem !important;
+        }
+      }
     </style>
   </head>
   <body>
@@ -1707,11 +1723,15 @@
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.5rem', marginBottom: '1.5rem' }}>
-                {DAYS.map(day => (
-                  <button key={day.idx} className={`btn ${selectedDayIdx === day.idx ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '0.7rem 0.2rem', fontSize: '0.8rem' }} onClick={() => setSelectedDayIdx(day.idx)}>
-                    {day.name}
-                  </button>
-                ))}
+                {(() => {
+                  const shortDayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+                  return DAYS.map(day => (
+                    <button key={day.idx} className={`btn weekday-btn ${selectedDayIdx === day.idx ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setSelectedDayIdx(day.idx)}>
+                      <span className="tab-text-desktop">{day.name}</span>
+                      <span className="tab-text-mobile">{shortDayNames[day.idx - 1]}</span>
+                    </button>
+                  ));
+                })()}
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -5533,7 +5553,7 @@
                 zIndex: 100
               }}
             >
-              <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '1rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="header-container">
                 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }} onClick={() => setActiveTab(currentUser.rol === 'administrador' ? 'admin' : 'wod')}>
                   <Icon name="dumbbell" color="var(--color-primary)" size={24} />
@@ -5546,7 +5566,7 @@
                     <span style={{ fontWeight: '600' }} className="hide-mobile">{currentUser.name}</span>
                     {currentUser.rol === 'cliente' ? (
                       <span style={{ color: 'var(--color-primary)', fontSize: '0.75rem', fontWeight: '500' }}>
-                        {currentUser.creditos_disponibles} Créditos disp.
+                        {currentUser.creditos_disponibles} <span className="tab-text-desktop">Créditos disp.</span><span className="tab-text-mobile">Créd.</span>
                       </span>
                     ) : (
                       <span className="badge badge-primary" style={{ fontSize: '0.65rem', padding: '0.1rem 0.5rem' }}>ADMINISTRADOR</span>
@@ -5628,12 +5648,12 @@
                       {currentUser.consent ? (
                         <>
                           <Icon name="check" size={14} color="var(--color-success)" />
-                          <span style={{ color: 'var(--color-success)' }}>Apto Médico</span>
+                          <span style={{ color: 'var(--color-success)' }} className="hide-mobile">Apto Médico</span>
                         </>
                       ) : (
                         <>
                           <Icon name="alert" size={14} color="var(--color-danger)" />
-                          <span style={{ color: 'var(--color-danger)' }}>Sin Apto</span>
+                          <span style={{ color: 'var(--color-danger)' }} className="hide-mobile">Sin Apto</span>
                         </>
                       )}
                     </button>

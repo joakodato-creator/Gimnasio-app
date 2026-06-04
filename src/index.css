@@ -496,3 +496,19 @@ p {
   }
 }
 
+/* Contenedor del Header responsivo (Hito 13) */
+.header-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .header-container {
+    padding: 0.75rem 0.75rem !important;
+  }
+}
+
