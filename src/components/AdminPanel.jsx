@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../utils/mockData';
-import { Users, FileSpreadsheet, PlusCircle, CreditCard, Send, CheckCircle2, XCircle, Trash2, Calendar, Landmark, BarChart3, TrendingUp, UserCheck, Percent, RefreshCw } from 'lucide-react';
+import { Users, FileSpreadsheet, PlusCircle, CreditCard, Send, CheckCircle2, XCircle, Trash2, Calendar, Landmark, BarChart3, TrendingUp, UserCheck, Percent, RefreshCw, Mail } from 'lucide-react';
 
 export default function AdminPanel({ onUpdateUser }) {
   const [clients, setClients] = useState([]);
@@ -42,6 +42,22 @@ export default function AdminPanel({ onUpdateUser }) {
   const [selectedMonth, setSelectedMonth] = useState('');
   const [selectedWeek, setSelectedWeek] = useState('');
   const [selectedReportDate, setSelectedReportDate] = useState(new Date().toISOString().split('T')[0]);
+  
+  // Configuración de notificaciones reales (Hito 14)
+  const [showConfig, setShowConfig] = useState(false);
+  const [configPrefix, setConfigPrefix] = useState(localStorage.getItem('gym_whatsapp_prefix') || '54');
+  const [configServiceId, setConfigServiceId] = useState(localStorage.getItem('gym_emailjs_service_id') || '');
+  const [configTemplateId, setConfigTemplateId] = useState(localStorage.getItem('gym_emailjs_template_id') || '');
+  const [configPublicKey, setConfigPublicKey] = useState(localStorage.getItem('gym_emailjs_public_key') || '');
+
+  const handleSaveConfig = () => {
+    localStorage.setItem('gym_whatsapp_prefix', configPrefix);
+    localStorage.setItem('gym_emailjs_service_id', configServiceId);
+    localStorage.setItem('gym_emailjs_template_id', configTemplateId);
+    localStorage.setItem('gym_emailjs_public_key', configPublicKey);
+    showMsg('Configuración de notificaciones guardada.', 'success');
+    setShowConfig(false);
+  };
 
   // Agrupación dinámica para selectores
   const getMonthsAvailable = (customPayments, customBookings) => {
@@ -823,13 +839,83 @@ export default function AdminPanel({ onUpdateUser }) {
 
             {/* Consola de Notificaciones Enviadas (WhatsApp / Email) */}
             <div className="glass-card">
-              <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem', color: 'var(--color-accent)' }}>
-                <Send size={20} color="var(--color-accent)" /> Consola de Notificaciones Simuladas
-              </h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-accent)', margin: 0 }}>
+                  <Send size={20} color="var(--color-accent)" /> Consola de Notificaciones y Envíos Reales
+                </h3>
+                <button 
+                  type="button"
+                  onClick={() => setShowConfig(!showConfig)}
+                  className="btn btn-secondary"
+                  style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                >
+                  {showConfig ? 'Ocultar Configuración' : 'Configurar API / WhatsApp'}
+                </button>
+              </div>
+
               <p style={{ fontSize: '0.8rem', marginBottom: '1rem' }}>
-                Registro en tiempo real de los correos y mensajes de WhatsApp que la aplicación despacharía a los móviles/correos de los atletas.
+                Registro en tiempo real de los correos y mensajes del gimnasio. Haz clic en "Enviar" para despachar de forma real a los atletas.
               </p>
-              <div style={{ overflowY: 'auto', maxHeight: '250px', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+
+              {showConfig && (
+                <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border-glass)', borderRadius: '8px', marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <h4 style={{ color: '#fff', fontSize: '0.9rem', fontWeight: '600' }}>Ajustes de Notificaciones Reales</h4>
+                  <div className="responsive-grid-2" style={{ gap: '1rem' }}>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.75rem' }}>Prefijo Telefónico WhatsApp (ej: 54)</label>
+                      <input 
+                        type="text" 
+                        className="form-input" 
+                        placeholder="Ej: 54 o 549" 
+                        value={configPrefix} 
+                        onChange={(e) => setConfigPrefix(e.target.value)} 
+                      />
+                    </div>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.75rem' }}>EmailJS Service ID</label>
+                      <input 
+                        type="text" 
+                        className="form-input" 
+                        placeholder="Ej: service_xxxxxx" 
+                        value={configServiceId} 
+                        onChange={(e) => setConfigServiceId(e.target.value)} 
+                      />
+                    </div>
+                  </div>
+                  <div className="responsive-grid-2" style={{ gap: '1rem' }}>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.75rem' }}>EmailJS Template ID</label>
+                      <input 
+                        type="text" 
+                        className="form-input" 
+                        placeholder="Ej: template_xxxxxx" 
+                        value={configTemplateId} 
+                        onChange={(e) => setConfigTemplateId(e.target.value)} 
+                      />
+                    </div>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.75rem' }}>EmailJS Public Key (Public API Key)</label>
+                      <input 
+                        type="text" 
+                        className="form-input" 
+                        placeholder="Ej: user_xxxxxx o Key" 
+                        value={configPublicKey} 
+                        onChange={(e) => setConfigPublicKey(e.target.value)} 
+                      />
+                    </div>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={handleSaveConfig} 
+                    className="btn btn-primary" 
+                    style={{ alignSelf: 'flex-start', padding: '0.4rem 1rem', fontSize: '0.8rem' }}
+                  >
+                    Guardar Configuración
+                  </button>
+                </div>
+              )}
+
+              <div style={{ overflowY: 'auto', maxHeight: '350px', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {notifications.length === 0 ? (
                   <p style={{ fontStyle: 'italic' }}>No se han emitido notificaciones aún.</p>
                 ) : (
@@ -840,21 +926,92 @@ export default function AdminPanel({ onUpdateUser }) {
                         padding: '0.75rem', 
                         background: 'rgba(255,255,255,0.02)', 
                         border: '1px solid var(--border-glass)',
-                        borderRadius: '4px'
+                        borderRadius: '4px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: '1rem',
+                        flexWrap: 'wrap'
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                        <span className={`badge ${not.tipo === 'whatsapp' ? 'badge-success' : 'badge-primary'}`} style={{ fontSize: '0.65rem' }}>
-                          {not.tipo.toUpperCase()}
-                        </span>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>{not.fecha}</span>
+                      <div style={{ flex: 1, minWidth: '200px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                          <span className={`badge ${not.tipo === 'whatsapp' ? 'badge-success' : 'badge-primary'}`} style={{ fontSize: '0.65rem' }}>
+                            {not.tipo.toUpperCase()}
+                          </span>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>{not.fecha}</span>
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>
+                          Destinatario: <strong style={{ color: 'var(--color-text-main)' }}>{not.destinatario}</strong>
+                        </div>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--color-text-main)', fontFamily: 'var(--font-secondary)' }}>
+                          {not.mensaje}
+                        </p>
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>
-                        Destinatario: <strong style={{ color: 'var(--color-text-main)' }}>{not.destinatario}</strong>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', minWidth: '130px' }}>
+                        {not.tipo === 'whatsapp' ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const cleanPhone = not.destinatario.replace(/\D/g, '');
+                              const prefix = localStorage.getItem('gym_whatsapp_prefix') || '54';
+                              const finalPhone = cleanPhone.startsWith('54') || cleanPhone.length > 10 ? cleanPhone : (prefix + cleanPhone);
+                              const waUrl = `https://api.whatsapp.com/send?phone=${finalPhone}&text=${encodeURIComponent(not.mensaje)}`;
+                              window.open(waUrl, '_blank');
+                            }}
+                            className="btn btn-primary"
+                            style={{ padding: '0.35rem 0.5rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem', justifyContent: 'center', width: '100%' }}
+                          >
+                            <Send size={12} /> Abrir WhatsApp
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const serviceId = localStorage.getItem('gym_emailjs_service_id');
+                              const templateId = localStorage.getItem('gym_emailjs_template_id');
+                              const publicKey = localStorage.getItem('gym_emailjs_public_key');
+                              
+                              if (serviceId && templateId && publicKey) {
+                                try {
+                                  const res = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                      service_id: serviceId,
+                                      template_id: templateId,
+                                      user_id: publicKey,
+                                      template_params: {
+                                        to_name: "Atleta",
+                                        to_email: not.destinatario,
+                                        message: not.mensaje,
+                                        subject: "Notificación del Gimnasio"
+                                      }
+                                    })
+                                  });
+                                  if (res.ok) {
+                                    showMsg("Correo enviado vía EmailJS con éxito.", "success");
+                                  } else {
+                                    const err = await res.text();
+                                    showMsg(`Fallo al enviar correo: ${err}`, "danger");
+                                  }
+                                } catch (e) {
+                                  showMsg(`Error de red: ${e.message}`, "danger");
+                                }
+                              } else {
+                                const mailtoUrl = `mailto:${not.destinatario}?subject=Notificación del Gimnasio&body=${encodeURIComponent(not.mensaje)}`;
+                                window.open(mailtoUrl, '_blank');
+                              }
+                            }}
+                            className="btn btn-secondary"
+                            style={{ padding: '0.35rem 0.5rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem', justifyContent: 'center', width: '100%' }}
+                          >
+                            <Mail size={12} />
+                            {localStorage.getItem('gym_emailjs_service_id') ? 'Enviar EmailJS' : 'Enviar por Correo'}
+                          </button>
+                        )}
                       </div>
-                      <p style={{ fontSize: '0.85rem', color: 'var(--color-text-main)', fontFamily: 'var(--font-secondary)' }}>
-                        {not.mensaje}
-                      </p>
                     </div>
                   ))
                 )}
