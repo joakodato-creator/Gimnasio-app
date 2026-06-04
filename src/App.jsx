@@ -64,14 +64,7 @@ export default function App() {
         setBookings(loadedBookings);
         const loadedClasses = await db.getClasses();
         setClasses(loadedClasses);
-        
-        // Auto-login con el gestor para que sea más fácil testear inicialmente
-        const allUsers = await db.getUsers();
-        const admin = allUsers.find(u => u.username === 'gestor');
-        if (admin) {
-          setCurrentUser(admin);
-          setActiveTab('admin');
-        }
+
       } catch (err) {
         console.error("Error initializing app:", err);
       }
@@ -277,11 +270,11 @@ export default function App() {
           {!isRegistering ? (
             <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               <div className="form-group">
-                <label className="form-label">Nombre de Usuario</label>
+                <label className="form-label">Nombre</label>
                 <input 
                   type="text" 
                   className="form-input" 
-                  placeholder="Ej: lucas, sofia, gestor" 
+                  placeholder="Ingresa tu nombre de usuario" 
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
@@ -292,7 +285,7 @@ export default function App() {
                 <input 
                   type="password" 
                   className="form-input" 
-                  placeholder="Ingresa tu clave" 
+                  placeholder="Ingresa tu contraseña" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required

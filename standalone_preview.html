@@ -4959,11 +4959,7 @@
               const loadedClasses = await db.getClasses();
               setClasses(loadedClasses);
               
-              const admin = (await db.getUsers()).find(u => u.username === 'gestor');
-              if (admin) {
-                setCurrentUser(admin);
-                setActiveTab('admin');
-              }
+
             } catch(err) {
               console.error(err);
             }
@@ -5143,11 +5139,11 @@
                 {!isRegistering ? (
                   <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                     <div className="form-group">
-                      <label className="form-label">Nombre de Usuario</label>
+                      <label className="form-label">Nombre</label>
                       <input 
                         type="text" 
                         className="form-input" 
-                        placeholder="Ej: lucas, sofia, gestor" 
+                        placeholder="Ingresa tu nombre de usuario" 
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         required
@@ -5158,7 +5154,7 @@
                       <input 
                         type="password" 
                         className="form-input" 
-                        placeholder="Ingresa tu clave" 
+                        placeholder="Ingresa tu contraseña" 
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
