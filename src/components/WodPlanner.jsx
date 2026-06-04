@@ -142,15 +142,30 @@ export default function WodPlanner() {
 
     const catalogNames = exercisesCatalog.map(ex => ex.name).join(', ');
 
-    const prompt = `Eres un Entrenador de CrossFit Certificado (Nivel 3/4) y Especialista en Preparación Física Avanzada, experto en periodización deportiva y mesociclos. Tu box cuenta con el siguiente catálogo de ejercicios técnicos oficiales: [${catalogNames}].
-    Genera un entrenamiento estructurado para la fecha actual (tipo de WOD: ${wodType}) en base a las siguientes configuraciones de entrenamiento:
-    - Mesociclo de periodización: ${activeMesocycle} (donde 'fuerza' es fuerza máxima con bajas repeticiones >= 80% 1RM; 'volumen' es cargas moderadas con 8-12 reps; 'vo2_max' es foco en acondicionamiento metabólico cardiovascular y resistencia; 'deload' es descarga de baja intensidad; y 'peaking' es puesta a punto de alta intensidad).
+    const typeInstruction = wodType === 'hyrox'
+      ? `TIPO DE ENTRENAMIENTO: HYROX.
+      El enfoque debe ser 100% en la preparación física y metodología de HYROX.
+      - Incorpora pasadas de carrera comprometida (Compromised Running): mezclar intervalos de carrera (de 1km, 500m o 400m) intercalados inmediatamente antes o después de estaciones de fatiga muscular.
+      - Estaciones oficiales a utilizar: SkiErg, Sled Push (empuje de trineo), Sled Pull (tracción de trineo), Burpee Broad Jumps (saltos con burpee), Rowing (Remo), Farmers Carry (paseo del granjero), Sandbag Lunges (zancadas con saco) y Wall Balls (lanzamientos de balón a diana).
+      - Dosificación de carga: En la sección 'strength' o 'conditioning', programa entrenamientos específicos de empuje y tracción pesada (Sled simulations), zancadas con peso, o resistencia de agarre (Farmers Carry). Si usas ejercicios tradicionales, enfócalos en la transferencia de potencia a la carrera de HYROX (ej: sentadillas con tempo, peso muerto rumano).
+      - Especifica los pesos y estándares oficiales para las categorías de HYROX (Open vs Pro, Masculino vs Femenino) y estrategias de ritmo cardiovascular (pacing en Zonas Z2, Z3, Z4 o Z5).`
+      : `TIPO DE ENTRENAMIENTO: CROSSFIT.
+      El enfoque debe ser en la metodología tradicional de CrossFit de alta intensidad y variedad.
+      - Combina levantamiento de pesas olímpico pesado (Snatch, Clean & Jerk, Deadlift, squats), gimnásticos (Pull-ups, Muscle-ups, Handstand Pushups, Toes-to-bar) y metcons metabólicos variados (AMRAP, EMOM, RFT, Chippers).
+      - En el bloque de fuerza, selecciona ejercicios del catálogo y sugiere porcentajes de 1RM con repeticiones específicas.`;
+
+    const prompt = `Eres un Entrenador de CrossFit y Head Coach de HYROX Certificado, experto en fisiología del deporte, dosificación de carga y periodización de mesociclos. Tu box cuenta con el siguiente catálogo de ejercicios técnicos oficiales: [${catalogNames}].
+    
+    Genera un entrenamiento estructurado para la fecha actual en base a las siguientes configuraciones:
+    - Mesociclo de periodización: ${activeMesocycle} (donde 'fuerza' es fuerza máxima/resistencia pesada; 'volumen' es acumulación de repeticiones y volumen aeróbico; 'vo2_max' es foco en acondicionamiento metabólico cardiovascular y resistencia; 'deload' es descarga de baja intensidad; y 'peaking' es puesta a punto de alta intensidad).
     - Incluir entrenamiento específico de VO2 Max: ${includeVo2Max ? 'Sí, enfocado en ' + cardioType : 'No'}.
     - Indicación personalizada del Coach: ${aiPrompt || 'Ninguna'}.
     
+    ${typeInstruction}
+    
     INSTRUCCIONES CLAVE DE REDACCIÓN (EXIGE MÁXIMO DETALLE):
-    1. warmup: Debe ser muy detallado. Divide la descripción en sub-secciones claras (por ejemplo, 'Fase 1: Movilidad articular activa', 'Fase 2: Activación general/cardio' y 'Fase 3: Calentamiento específico con barra vacía/aproximación'). Especifica repeticiones y tiempos exactos.
-    2. strength: Explica con minuciosidad las series de aproximación (warmup sets) y las series efectivas (working sets). Proporciona consejos técnicos (cues) específicos para el movimiento (ej: mantener espalda neutra, rodillas hacia afuera, etc.).
+    1. warmup: Debe ser muy detallado. Divide la descripción en sub-secciones claras (por ejemplo, 'Fase 1: Movilidad articular activa', 'Fase 2: Activación general/cardio' y 'Fase 3: Calentamiento específico / Aproximación'). Especifica repeticiones y tiempos exactos.
+    2. strength: Explica con minuciosidad las series de aproximación (warmup sets) y las series efectivas (working sets) o progresiones. Proporciona consejos técnicos (cues) específicos para el movimiento.
     3. conditioning: Describe el WOD con lujo de detalles: especifica el formato (AMRAP/EMOM/RFT), la duración o límite de tiempo (Time Cap), los pesos sugeridos para hombres/mujeres (Rx y Scaled) y una estrategia recomendada de ritmo (pacing) para el atleta.
     4. midline: Detalla los ejercicios auxiliares del core de forma estructurada con sus rondas y reps correspondientes.
     5. extra: Si hay VO2 Max activo, describe un protocolo intervalado deportivo preciso (con distancias, tiempos de trabajo, zonas de esfuerzo e intervalos de descanso completo).
@@ -165,7 +180,7 @@ export default function WodPlanner() {
       },
       "strength": {
         "habilitado": true/false,
-        "descripcion": "Instrucciones detalladas del trabajo de fuerza o habilidad técnica en español. Si está habilitado, incluye series de aproximación, series efectivas, repeticiones y porcentajes sugeridos de RM con consejos técnicos.",
+        "descripcion": "Instrucciones detalladas del trabajo de fuerza o habilidad técnica en español. Si está habilitado, incluye series de aproximación, series efectivas, repeticiones y porcentajes sugeridos de RM o pesos propuestos con consejos técnicos.",
         "ejercicios": [
           { "nombre": "Nombre exacto del ejercicio que coincida con el catálogo (ej: 'Back Squat' o 'Snatch')", "porcentaje": 75, "reps": "5 sets x 3 reps" }
         ]
