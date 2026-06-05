@@ -6,6 +6,7 @@ import HyroxTraining from './components/HyroxTraining';
 import AdminPanel from './components/AdminPanel';
 import WodPlanner from './components/WodPlanner';
 import SportsMonitor from './components/SportsMonitor';
+import Leaderboard from './components/Leaderboard';
 import { 
   Dumbbell, Calendar, Percent, Trophy, Users, LogOut, Bell, 
   ShieldAlert, FileText, CheckCircle, Flame, MessageSquare, Info, Video, QrCode,
@@ -170,8 +171,8 @@ export default function App() {
 
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
-      const allowedClientTabs = ['wod', 'booking', 'crossfit', 'hyrox', 'checkin'];
-      const allowedAdminTabs = ['admin', 'wod_planner', 'sports_monitor'];
+      const allowedClientTabs = ['wod', 'booking', 'crossfit', 'hyrox', 'checkin', 'ranking'];
+      const allowedAdminTabs = ['admin', 'wod_planner', 'sports_monitor', 'ranking'];
 
       if (currentUser.rol === 'cliente') {
         if (allowedClientTabs.includes(hash)) {
@@ -735,6 +736,13 @@ export default function App() {
               <span className="tab-text-desktop">Seguimiento Deportivo (RMs & HYROX)</span>
               <span className="tab-text-mobile">Seguimiento</span>
             </button>
+            <button 
+              onClick={() => setActiveTab('ranking')} 
+              className={`btn ${activeTab === 'ranking' ? 'btn-primary' : 'btn-secondary'}`}
+            >
+              <span className="tab-text-desktop">Leaderboard & Rankings</span>
+              <span className="tab-text-mobile">Rankings</span>
+            </button>
           </div>
         )}
 
@@ -755,6 +763,9 @@ export default function App() {
             </button>
             <button onClick={() => setActiveTab('checkin')} className={`btn ${activeTab === 'checkin' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
               <span className="tab-text-desktop">Check-In QR</span><span className="tab-text-mobile">Check-In</span>
+            </button>
+            <button onClick={() => setActiveTab('ranking')} className={`btn ${activeTab === 'ranking' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
+              <span className="tab-text-desktop">Rankings</span><span className="tab-text-mobile">Rankings</span>
             </button>
           </div>
         )}
@@ -1258,6 +1269,11 @@ export default function App() {
         {/* 7. Seguimiento Deportivo (RMs & HYROX) (Solo Admin) */}
         {currentUser.rol === 'administrador' && activeTab === 'sports_monitor' && (
           <SportsMonitor />
+        )}
+
+        {/* 8. Rankings / Leaderboard (Ambos Roles) */}
+        {activeTab === 'ranking' && (
+          <Leaderboard currentUser={currentUser} onReloadPRs={loadUserPRs} />
         )}
 
 

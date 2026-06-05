@@ -718,6 +718,12 @@ export const db = {
     return db.getPRs();
   },
 
+  updatePR: async (prId, prData) => {
+    const { error } = await supabase.from('prs').update(prData).eq('id', prId);
+    if (error) throw error;
+    return db.getPRs();
+  },
+
   // Pagos
   getPayments: async () => {
     const { data, error } = await supabase.from('payments').select('*').order('created_at', { ascending: false });
