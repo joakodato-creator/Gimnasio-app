@@ -2,6 +2,37 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../utils/mockData';
 import { Users, FileSpreadsheet, PlusCircle, CreditCard, Send, CheckCircle2, XCircle, Trash2, Calendar, Landmark, BarChart3, TrendingUp, UserCheck, Percent, RefreshCw, Mail } from 'lucide-react';
 
+const getLocalDateString = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const formatLocalDate = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getUserRegistrationDate = (user) => {
+  if (!user.id) return '2026-05-01';
+  const parts = user.id.split('-');
+  if (parts.length === 2) {
+    const timestamp = Number(parts[1]);
+    if (!isNaN(timestamp)) {
+      const date = new Date(timestamp);
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+  }
+  return '2026-05-01';
+};
+
 export default function AdminPanel({ onUpdateUser }) {
   const [clients, setClients] = useState([]);
   const [selectedClient, setSelectedClient] = useState('');
@@ -18,7 +49,7 @@ export default function AdminPanel({ onUpdateUser }) {
   // Asistencias y Turnos States (Hito 6)
   const [bookings, setBookings] = useState([]);
   const [classes, setClasses] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(getLocalDateString());
 
   // Checkins & Tótem (Hito 10)
   const [activeAsistenciasView, setActiveAsistenciasView] = useState('grilla'); // 'grilla' o 'totem'
@@ -41,7 +72,8 @@ export default function AdminPanel({ onUpdateUser }) {
   const [reportType, setReportType] = useState('mensual'); // 'mensual' o 'semanal'
   const [selectedMonth, setSelectedMonth] = useState('');
   const [selectedWeek, setSelectedWeek] = useState('');
-  const [selectedReportDate, setSelectedReportDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedReportDate, setSelectedReportDate] = useState(getLocalDateString());
+  const [filterHistory, setFilterHistory] = useState('hoy'); // 'hoy' | 'mes' | 'todos'
   
 
 
@@ -394,6 +426,26 @@ export default function AdminPanel({ onUpdateUser }) {
   // Calcular ingresos totales
   const totalRevenue = payments.reduce((acc, curr) => acc + curr.monto, 0);
 
+  // Calcular ingresos del día y del mes (Hito 20)
+  const localTodayStr = getLocalDateString();
+  const currentMonthStr = localTodayStr.substring(0, 7);
+
+  const dailyPayments = payments.filter(p => p.fecha_pago === localTodayStr);
+  const dailyRevenue = dailyPayments.reduce((acc, curr) => acc + curr.monto, 0);
+
+  const monthlyPayments = payments.filter(p => p.fecha_pago && p.fecha_pago.startsWith(currentMonthStr));
+  const monthlyRevenue = monthlyPayments.reduce((acc, curr) => acc + curr.monto, 0);
+
+  // Conteo de nuevos atletas en los últimos 30 días
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const thirtyDaysAgoStr = formatLocalDate(thirtyDaysAgo);
+
+  const newClientsLastMonth = clients.filter(c => {
+    const regDate = getUserRegistrationDate(c);
+    return regDate >= thirtyDaysAgoStr;
+  });
+
   // Obtener nombre del cliente para los pagos
   const getClientName = (id) => {
     const u = clients.find(user => user.id === id);
@@ -402,10 +454,8 @@ export default function AdminPanel({ onUpdateUser }) {
     return 'Desconocido';
   };
 
-
-
   // Determinar quiénes tienen pago pendiente (0 créditos o vencidos)
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getLocalDateString();
   const pendingClients = clients.filter(c => c.creditos_disponibles <= 0 || c.fecha_vencimiento_creditos < todayStr);
 
   return (
@@ -459,25 +509,46 @@ export default function AdminPanel({ onUpdateUser }) {
 
       {subTab === 'caja' && (
         <>
-          {/* Indicadores Financieros rápidos */}
-          <div className="grid-3">
-            <div className="glass-card" style={{ borderLeft: '4px solid var(--color-success)' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>Caja Registrada (Total Histórico)</span>
-              <h2 style={{ fontSize: '2rem', marginTop: '0.25rem', color: 'var(--color-success)' }}>
+          {/* Indicadores Financieros rápidos (Hito 20) */}
+          <div className="responsive-grid-4" style={{ gap: '1rem', marginBottom: '1.5rem' }}>
+            <div className="glass-card" style={{ borderLeft: '4px solid var(--color-success)', padding: '1.25rem' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', display: 'block' }}>Caja del Día (Hoy)</span>
+              <h2 style={{ fontSize: '1.8rem', marginTop: '0.25rem', color: 'var(--color-success)' }}>
+                ${dailyRevenue.toLocaleString()}
+              </h2>
+              <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', display: 'block', marginTop: '0.25rem' }}>
+                {dailyPayments.length} transacciones hoy
+              </span>
+            </div>
+            
+            <div className="glass-card" style={{ borderLeft: '4px solid var(--color-primary)', padding: '1.25rem' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', display: 'block' }}>Caja del Mes</span>
+              <h2 style={{ fontSize: '1.8rem', marginTop: '0.25rem', color: 'var(--color-primary)' }}>
+                ${monthlyRevenue.toLocaleString()}
+              </h2>
+              <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', display: 'block', marginTop: '0.25rem' }}>
+                {monthlyPayments.length} transacciones este mes
+              </span>
+            </div>
+
+            <div className="glass-card" style={{ borderLeft: '4px solid var(--color-accent)', padding: '1.25rem' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', display: 'block' }}>Nuevos Atletas (Últimos 30 días)</span>
+              <h2 style={{ fontSize: '1.8rem', marginTop: '0.25rem', color: 'var(--color-accent)' }}>
+                {newClientsLastMonth.length} Atletas
+              </h2>
+              <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', display: 'block', marginTop: '0.25rem' }}>
+                Total histórico: {clients.length}
+              </span>
+            </div>
+
+            <div className="glass-card" style={{ borderLeft: '4px solid var(--color-text-muted)', padding: '1.25rem', background: 'rgba(255,255,255,0.01)' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', display: 'block' }}>Caja Histórica (Acumulado)</span>
+              <h2 style={{ fontSize: '1.8rem', marginTop: '0.25rem', color: '#fff' }}>
                 ${totalRevenue.toLocaleString()}
               </h2>
-            </div>
-            <div className="glass-card" style={{ borderLeft: '4px solid var(--color-accent)' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>Clientes Registrados</span>
-              <h2 style={{ fontSize: '2rem', marginTop: '0.25rem', color: 'var(--color-accent)' }}>
-                {clients.length} Atletas
-              </h2>
-            </div>
-            <div className="glass-card" style={{ borderLeft: '4px solid var(--color-primary)' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>Total Transacciones</span>
-              <h2 style={{ fontSize: '2rem', marginTop: '0.25rem', color: 'var(--color-text-main)' }}>
-                {payments.length} Pagos
-              </h2>
+              <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', display: 'block', marginTop: '0.25rem' }}>
+                Total: {payments.length} pagos
+              </span>
             </div>
           </div>
 
@@ -809,34 +880,107 @@ export default function AdminPanel({ onUpdateUser }) {
           </div>
 
           <div className="grid-2">
-            {/* Historial de Pagos Recientes */}
+            {/* Historial de Pagos Recientes (Hito 20) */}
             <div className="glass-card">
-              <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem', color: 'var(--color-text-main)' }}>
-                <FileSpreadsheet size={20} /> Historial Financiero de Caja
-              </h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text-main)', margin: 0 }}>
+                  <FileSpreadsheet size={20} /> Historial Financiero de Caja
+                </h3>
+                
+                {/* Botones de filtro del historial */}
+                <div style={{ display: 'flex', gap: '0.25rem', background: 'rgba(255,255,255,0.03)', padding: '0.2rem', borderRadius: '6px', border: '1px solid var(--border-glass)' }}>
+                  <button 
+                    type="button"
+                    onClick={() => setFilterHistory('hoy')}
+                    className="btn"
+                    style={{ 
+                      fontSize: '0.75rem', 
+                      padding: '0.3rem 0.6rem', 
+                      background: filterHistory === 'hoy' ? 'var(--color-primary)' : 'transparent',
+                      color: filterHistory === 'hoy' ? '#000' : 'var(--color-text-muted)',
+                      border: 'none',
+                      borderRadius: '4px',
+                      fontWeight: '600'
+                    }}
+                  >
+                    Hoy
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setFilterHistory('mes')}
+                    className="btn"
+                    style={{ 
+                      fontSize: '0.75rem', 
+                      padding: '0.3rem 0.6rem', 
+                      background: filterHistory === 'mes' ? 'var(--color-primary)' : 'transparent',
+                      color: filterHistory === 'mes' ? '#000' : 'var(--color-text-muted)',
+                      border: 'none',
+                      borderRadius: '4px',
+                      fontWeight: '600'
+                    }}
+                  >
+                    Este Mes
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setFilterHistory('todos')}
+                    className="btn"
+                    style={{ 
+                      fontSize: '0.75rem', 
+                      padding: '0.3rem 0.6rem', 
+                      background: filterHistory === 'todos' ? 'var(--color-primary)' : 'transparent',
+                      color: filterHistory === 'todos' ? '#000' : 'var(--color-text-muted)',
+                      border: 'none',
+                      borderRadius: '4px',
+                      fontWeight: '600'
+                    }}
+                  >
+                    Histórico
+                  </button>
+                </div>
+              </div>
+
               <div style={{ overflowY: 'auto', maxHeight: '300px' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid var(--border-glass)', textAlign: 'left' }}>
-                      <th style={{ padding: '0.5rem', color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>FECHA</th>
-                      <th style={{ padding: '0.5rem', color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>ATLETA</th>
-                      <th style={{ padding: '0.5rem', color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>MÉTODO</th>
-                      <th style={{ padding: '0.5rem', color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>MONTO</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {payments.map(pay => (
-                      <tr key={pay.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
-                        <td style={{ padding: '0.5rem', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{pay.fecha_pago}</td>
-                        <td style={{ padding: '0.5rem', fontSize: '0.85rem', fontWeight: '500' }}>{getClientName(pay.cliente_id)}</td>
-                        <td style={{ padding: '0.5rem', fontSize: '0.85rem' }}>{pay.metodo_pago}</td>
-                        <td style={{ padding: '0.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--color-success)' }}>
-                          ${pay.monto.toLocaleString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                {(() => {
+                  const filteredPaymentsList = payments.filter(pay => {
+                    if (filterHistory === 'hoy') return pay.fecha_pago === localTodayStr;
+                    if (filterHistory === 'mes') return pay.fecha_pago && pay.fecha_pago.startsWith(currentMonthStr);
+                    return true;
+                  });
+
+                  if (filteredPaymentsList.length === 0) {
+                    return (
+                      <p style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', fontStyle: 'italic', textAlign: 'center', padding: '2rem 0' }}>
+                        No se registraron transacciones para el período seleccionado.
+                      </p>
+                    );
+                  }
+
+                  return (
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid var(--border-glass)', textAlign: 'left' }}>
+                          <th style={{ padding: '0.5rem', color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>FECHA</th>
+                          <th style={{ padding: '0.5rem', color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>ATLETA</th>
+                          <th style={{ padding: '0.5rem', color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>MÉTODO</th>
+                          <th style={{ padding: '0.5rem', color: 'var(--color-text-muted)', fontSize: '0.75rem', textAlign: 'right' }}>MONTO</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredPaymentsList.map(pay => (
+                          <tr key={pay.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
+                            <td style={{ padding: '0.5rem', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{pay.fecha_pago}</td>
+                            <td style={{ padding: '0.5rem', fontSize: '0.85rem', fontWeight: '500' }}>{getClientName(pay.cliente_id)}</td>
+                            <td style={{ padding: '0.5rem', fontSize: '0.85rem' }}>{pay.metodo_pago}</td>
+                            <td style={{ padding: '0.5rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--color-success)', textAlign: 'right' }}>
+                              ${pay.monto.toLocaleString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  );
+                })()}
               </div>
             </div>
 
