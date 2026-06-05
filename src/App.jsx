@@ -31,6 +31,7 @@ const formatLocalDate = (date) => {
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
+  const [loadingSession, setLoadingSession] = useState(true);
   const [activeTab, setActiveTab] = useState('wod'); // 'wod', 'booking', 'crossfit', 'hyrox', 'admin'
   const [showConsentModal, setShowConsentModal] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -128,18 +129,8 @@ export default function App() {
     const initApp = async () => {
       try {
         await db.init();
-        const loadedWods = await db.getWods();
-        setWods(loadedWods);
-        const loadedNots = await db.getNotifications();
-        setNotifications(loadedNots);
-        const loadedPRs = await db.getPRs();
-        setPrs(loadedPRs);
-        const loadedBookings = await db.getBookings();
-        setBookings(loadedBookings);
-        const loadedClasses = await db.getClasses();
-        setClasses(loadedClasses);
 
-        // Restaurar sesión de localStorage
+        // Restaurar sesión de localStorage inmediatamente para evitar parpadeo
         const cachedUserId = localStorage.getItem('gym_user_id');
         if (cachedUserId) {
           const allUsers = await db.getUsers();
@@ -153,8 +144,26 @@ export default function App() {
             }
           }
         }
+
+        setLoadingSession(false);
+
+        // Cargar el resto de las planificaciones en paralelo
+        const [loadedWods, loadedNots, loadedPRs, loadedBookings, loadedClasses] = await Promise.all([
+          db.getWods(),
+          db.getNotifications(),
+          db.getPRs(),
+          db.getBookings(),
+          db.getClasses()
+        ]);
+
+        setWods(loadedWods);
+        setNotifications(loadedNots);
+        setPrs(loadedPRs);
+        setBookings(loadedBookings);
+        setClasses(loadedClasses);
       } catch (err) {
         console.error("Error initializing app:", err);
+        setLoadingSession(false);
       }
     };
     initApp();
@@ -385,6 +394,20 @@ export default function App() {
   // WOD de hoy
   const todayStr = getLocalDateString();
   const todayWod = wods.find(w => w.fecha === todayStr) || wods[0]; // fallback al último cargado
+
+  if (loadingSession) {
+    return (
+      <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-main)', color: 'var(--color-primary)' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="animated-glow" style={{ display: 'inline-flex', background: 'rgba(190, 242, 100, 0.1)', padding: '1.5rem', borderRadius: '50%', marginBottom: '1rem' }}>
+            <Dumbbell size={48} className="hover-scale" />
+          </div>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#fff', letterSpacing: '-0.025em' }}>GIMNASIO PERFORMANCE</h2>
+          <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginTop: '0.5rem' }}>Cargando tu sesión y planificaciones...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!currentUser) {
     return (
