@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { db } from './utils/mockData';
+import { db, hashPassword } from './utils/mockData';
 import BookingCalendar from './components/BookingCalendar';
 import CrossFitTools from './components/CrossFitTools';
 import HyroxTraining from './components/HyroxTraining';
@@ -125,6 +125,12 @@ export default function App() {
   const [confirmPassVal, setConfirmPassVal] = useState('');
   const [resetPassError, setResetPassError] = useState('');
 
+  // Estados de Lanzamiento Público
+  const [regGymCode, setRegGymCode] = useState('');
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
   useEffect(() => {
     const initApp = async () => {
       try {
@@ -167,6 +173,20 @@ export default function App() {
       }
     };
     initApp();
+  }, []);
+
+  // Monitorear estado de conexión a Internet
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, []);
 
   // URL Hash Routing (Hito 13 - Solución a navegación e historial)
@@ -239,9 +259,24 @@ export default function App() {
     e.preventDefault();
     try {
       const allUsers = await db.getUsers();
-      const user = allUsers.find(u => u.username === username.toLowerCase() && u.password === password);
+      const inputHash = await hashPassword(password);
+      
+      let user = allUsers.find(u => 
+        u.username === username.toLowerCase() && 
+        (u.password === inputHash || u.password === password)
+      );
       
       if (user) {
+        // Transición de contraseña de texto plano antiguo a hash SHA-256
+        if (user.password === password) {
+          try {
+            const updated = await db.updateUserPassword(user.id, password);
+            user = updated;
+          } catch (migrateErr) {
+            console.error("Error migrating password to hash:", migrateErr);
+          }
+        }
+
         setCurrentUser(user);
         localStorage.setItem('gym_user_id', user.id);
         setLoginError('');
@@ -275,6 +310,19 @@ export default function App() {
     e.preventDefault();
     if (!regName || !regUsername || !regPassword) return;
 
+    // Validar código de invitación del gimnasio
+    const gymCodeEnv = import.meta.env.VITE_GYM_INVITATION_CODE || 'GIMNASIO2026';
+    if (regGymCode.trim().toUpperCase() !== gymCodeEnv.trim().toUpperCase()) {
+      setLoginError("Código de invitación del gimnasio incorrecto. Pídelo al administrador.");
+      return;
+    }
+
+    // Validar aceptación de términos y políticas
+    if (!acceptTerms) {
+      setLoginError("Debes aceptar los Términos de Servicio y la Política de Privacidad.");
+      return;
+    }
+
     try {
       const newUser = await db.registerUser({
         name: regName,
@@ -293,6 +341,8 @@ export default function App() {
       setRegPassword('');
       setRegEmail('');
       setRegPhone('');
+      setRegGymCode('');
+      setAcceptTerms(false);
       setIsRegistering(false);
 
       setCurrentUser(newUser);
@@ -411,7 +461,31 @@ export default function App() {
 
   if (!currentUser) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1rem', position: 'relative' }}>
+        {!isOnline && (
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            background: 'var(--color-danger)',
+            color: '#fff',
+            textAlign: 'center',
+            padding: '0.6rem 1rem',
+            fontSize: '0.85rem',
+            fontWeight: '600',
+            backdropFilter: 'blur(10px)',
+            zIndex: 10,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+          }}>
+            <ShieldAlert size={16} />
+            <span>Sin conexión a Internet. Operando en modo offline de lectura local.</span>
+          </div>
+        )}
         <div className="glass-card" style={{ maxWidth: '450px', width: '100%', padding: '2.5rem' }}>
           
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
@@ -519,6 +593,32 @@ export default function App() {
                   onChange={(e) => setRegPhone(e.target.value)}
                 />
               </div>
+              
+              <div className="form-group">
+                <label className="form-label">Código de Invitación del Gimnasio</label>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  placeholder="Pídelo en recepción" 
+                  value={regGymCode}
+                  onChange={(e) => setRegGymCode(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', marginTop: '0.25rem', marginBottom: '0.5rem' }}>
+                <input 
+                  type="checkbox" 
+                  id="accept-terms-checkbox"
+                  checked={acceptTerms}
+                  onChange={(e) => setAcceptTerms(e.target.checked)}
+                  style={{ marginTop: '0.2rem', cursor: 'pointer' }}
+                  required
+                />
+                <label htmlFor="accept-terms-checkbox" style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', lineHeight: '1.3', cursor: 'pointer' }}>
+                  Acepto los <button type="button" onClick={() => setShowTermsModal(true)} style={{ background: 'none', border: 'none', padding: 0, color: 'var(--color-primary)', textDecoration: 'underline', cursor: 'pointer', font: 'inherit' }}>Términos de Servicio</button> y la <button type="button" onClick={() => setShowTermsModal(true)} style={{ background: 'none', border: 'none', padding: 0, color: 'var(--color-primary)', textDecoration: 'underline', cursor: 'pointer', font: 'inherit' }}>Política de Privacidad</button>.
+                </label>
+              </div>
 
               <button type="submit" className="btn btn-secondary" style={{ width: '100%', marginTop: '0.5rem', borderColor: 'var(--color-accent)', color: 'var(--color-accent)' }}>
                 Registrarme y Comenzar
@@ -594,7 +694,26 @@ export default function App() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative' }}>
+      {!isOnline && (
+        <div style={{
+          background: 'var(--color-danger)',
+          color: '#fff',
+          textAlign: 'center',
+          padding: '0.5rem 1rem',
+          fontSize: '0.85rem',
+          fontWeight: '600',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '0.5rem',
+          zIndex: 1001,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+        }}>
+          <ShieldAlert size={14} />
+          <span>Operando en modo sin conexión (offline). Algunas funciones de base de datos están inhabilitadas hasta recuperar conexión.</span>
+        </div>
+      )}
       
       {/* Header / Navbar */}
       <header 
@@ -1618,11 +1737,65 @@ export default function App() {
           padding: '1.5rem',
           textAlign: 'center',
           fontSize: '0.8rem',
-          color: 'var(--color-text-muted)'
+          color: 'var(--color-text-muted)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '0.5rem'
         }}
       >
-        <p>© 2026 Gimnasio Performance S.A. | Todos los derechos reservados. Desarrollado en modo LocalStorage.</p>
+        <p>© 2026 Gimnasio Performance S.A. | Todos los derechos reservados.</p>
+        <p>
+          <button type="button" onClick={() => setShowTermsModal(true)} style={{ background: 'none', border: 'none', color: 'var(--color-primary)', textDecoration: 'underline', cursor: 'pointer', font: 'inherit', padding: 0 }}>
+            Términos de Servicio y Política de Privacidad
+          </button>
+        </p>
       </footer>
+
+      {/* MODAL DE TÉRMINOS DE SERVICIO Y POLÍTICA DE PRIVACIDAD */}
+      {showTermsModal && (
+        <div className="modal-overlay" style={{ zIndex: 1000 }}>
+          <div className="modal-content" style={{ maxWidth: '600px', width: '100%', padding: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.5rem' }}>
+              <h3 style={{ margin: 0, color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <FileText size={20} /> Términos Legales y Privacidad
+              </h3>
+              <button 
+                onClick={() => setShowTermsModal(false)} 
+                className="btn btn-secondary" 
+                style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem' }}
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '0.85rem', color: 'var(--color-text-muted)', maxHeight: '350px', overflowY: 'auto', paddingRight: '0.5rem', marginBottom: '1.5rem', textAlign: 'left' }}>
+              <h4 style={{ color: '#fff', marginBottom: '0.25rem' }}>1. Aceptación de los Términos</h4>
+              <p>Al registrarse y utilizar la plataforma Gimnasio Performance, usted acepta de manera incondicional estos Términos de Servicio y nuestra Política de Privacidad. Si no está de acuerdo, le solicitamos abstenerse de usar la aplicación.</p>
+              
+              <h4 style={{ color: '#fff', marginBottom: '0.25rem' }}>2. Privacidad de los Datos Personales</h4>
+              <p>Nos comprometemos a proteger su privacidad. Los datos recopilados (nombre completo, dirección de correo electrónico y número de teléfono de WhatsApp) son utilizados únicamente para la gestión administrativa del gimnasio, control de reservas, envío de alertas de créditos y registro de marcas deportivas. Sus datos personales no serán compartidos, vendidos ni transferidos a terceros bajo ninguna circunstancia.</p>
+              
+              <h4 style={{ color: '#fff', marginBottom: '0.25rem' }}>3. Uso de la Cuenta y Seguridad</h4>
+              <p>Usted es responsable de mantener la confidencialidad de sus credenciales de acceso (usuario y contraseña). Cualquier actividad realizada bajo su cuenta será de su exclusiva responsabilidad. Su contraseña será almacenada utilizando cifrado de seguridad asimétrico (SHA-256).</p>
+              
+              <h4 style={{ color: '#fff', marginBottom: '0.25rem' }}>4. Reservas de Turnos y Créditos</h4>
+              <p>El acceso a los turnos horarios del gimnasio está sujeto a la disponibilidad de créditos activos en su cuenta y a la aceptación obligatoria de la Declaración de Aptitud Física. Las cancelaciones de turnos deben realizarse con un mínimo de 1 hora de antelación para recibir el reembolso de su crédito.</p>
+              
+              <h4 style={{ color: '#fff', marginBottom: '0.25rem' }}>5. Deslinde de Responsabilidad Médica</h4>
+              <p>El entrenamiento de alta intensidad funcional conlleva riesgos intrínsecos. Usted reconoce que es el único responsable de evaluar su capacidad de entrenamiento y regular las cargas de peso de acuerdo a las pautas y marcas personales registradas en esta aplicación.</p>
+            </div>
+
+            <button 
+              onClick={() => setShowTermsModal(false)} 
+              className="btn btn-primary" 
+              style={{ width: '100%', padding: '0.65rem' }}
+            >
+              Entendido y Cerrar
+            </button>
+          </div>
+        </div>
+      )}
 
 
 

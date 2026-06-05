@@ -1,5 +1,17 @@
 import { supabase } from './supabaseClient';
 
+export const hashPassword = async (password) => {
+  if (!password) return '';
+  if (/^[a-f0-9]{64}$/i.test(password)) {
+    return password;
+  }
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+};
+
 const EXERCISES_DEFAULT = [
   { name: 'Back Squat', video_url: 'https://www.youtube.com/embed/ultWZbUMPL8' },
   { name: 'Front Squat', video_url: 'https://www.youtube.com/embed/vXMRzFdU_oU' },
@@ -284,7 +296,12 @@ export const db = {
       // 1. Sembrar Usuarios
       const { data: users, error: uErr } = await supabase.from('users').select('id');
       if (!uErr && (!users || users.length === 0)) {
-        const dbUsers = INITIAL_USERS.map(mapUserToDb);
+        const dbUsers = [];
+        for (const u of INITIAL_USERS) {
+          const dbU = mapUserToDb(u);
+          dbU.password = await hashPassword(dbU.password);
+          dbUsers.push(dbU);
+        }
         await supabase.from('users').insert(dbUsers);
       }
 
@@ -360,10 +377,12 @@ export const db = {
       throw new Error('El nombre de usuario ya está registrado.');
     }
 
+    const passwordHash = await hashPassword(userData.password || '123');
+
     const newUser = {
       id: `user-${Date.now()}`,
       username: userData.username.toLowerCase(),
-      password: userData.password || '123',
+      password: passwordHash,
       name: userData.name,
       rol: userData.rol || 'cliente',
       email: userData.email || '',
@@ -408,9 +427,10 @@ export const db = {
   },
 
   updateUserPassword: async (userId, newPassword) => {
+    const passwordHash = await hashPassword(newPassword);
     const { error } = await supabase
       .from('users')
-      .update({ password: newPassword, must_change_password: false })
+      .update({ password: passwordHash, must_change_password: false })
       .eq('id', userId);
     if (error) throw error;
 
@@ -419,13 +439,14 @@ export const db = {
   },
 
   updateUserProfile: async (userId, profileData) => {
+    const passwordHash = await hashPassword(profileData.password);
     const { error } = await supabase
       .from('users')
       .update({ 
         name: profileData.name, 
         email: profileData.email, 
         telefono: profileData.telefono,
-        password: profileData.password 
+        password: passwordHash 
       })
       .eq('id', userId);
     if (error) throw error;
