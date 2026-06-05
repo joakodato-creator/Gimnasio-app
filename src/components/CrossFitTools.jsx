@@ -141,7 +141,7 @@ export default function CrossFitTools({ user, onReloadPRs }) {
               className="form-input" 
               value={rmWeight}
               min="1"
-              onChange={(e) => setRmWeight(Number(e.target.value))}
+              onChange={(e) => setRmWeight(e.target.value.replace(/^0+(?=\d)/, ''))}
             />
           </div>
         </div>
@@ -212,7 +212,7 @@ export default function CrossFitTools({ user, onReloadPRs }) {
                   value={newPrWeight}
                   required
                   min="1"
-                  onChange={(e) => setNewPrWeight(e.target.value)}
+                  onChange={(e) => setNewPrWeight(e.target.value.replace(/^0+(?=\d)/, ''))}
                 />
               </div>
               <div className="form-group">
@@ -224,7 +224,7 @@ export default function CrossFitTools({ user, onReloadPRs }) {
                   max="20"
                   value={newPrReps}
                   required
-                  onChange={(e) => setNewPrReps(e.target.value)}
+                  onChange={(e) => setNewPrReps(e.target.value.replace(/^0+(?=\d)/, ''))}
                 />
               </div>
             </div>

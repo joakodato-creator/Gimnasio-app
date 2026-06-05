@@ -653,7 +653,7 @@ export default function WodPlanner() {
                         min="10" 
                         max="110" 
                         value={strengthTempPct} 
-                        onChange={(e) => setStrengthTempPct(e.target.value)} 
+                        onChange={(e) => setStrengthTempPct(e.target.value.replace(/^0+(?=\d)/, ''))} 
                       />
                     </div>
                     

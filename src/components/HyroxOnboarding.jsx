@@ -252,7 +252,7 @@ export default function HyroxOnboarding({ user, onUpdateUser, onBaselineSaved })
                   className="form-input"
                   placeholder="Peso en kg (Ej: 100)"
                   value={squat1rm}
-                  onChange={(e) => setSquat1rm(e.target.value)}
+                  onChange={(e) => setSquat1rm(e.target.value.replace(/^0+(?=\d)/, ''))}
                   required
                   style={{ paddingRight: '2.5rem' }}
                 />

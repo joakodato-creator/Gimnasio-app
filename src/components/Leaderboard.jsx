@@ -182,8 +182,8 @@ export default function Leaderboard({ currentUser, onReloadPRs }) {
     setModalError('');
     if (itemType === 'pr') {
       setEditForm({
-        peso_maximo_kg: itemData.peso_maximo_kg || 0,
-        repeticiones: itemData.repeticiones || 1,
+        peso_maximo_kg: itemData.peso_maximo_kg !== undefined && itemData.peso_maximo_kg !== null ? String(itemData.peso_maximo_kg) : '',
+        repeticiones: itemData.repeticiones !== undefined && itemData.repeticiones !== null ? String(itemData.repeticiones) : '',
         tiempo: itemData.tiempo || ''
       });
     } else if (itemType === 'hyrox') {
@@ -194,7 +194,7 @@ export default function Leaderboard({ currentUser, onReloadPRs }) {
         run1k: formatSecondsToTime(base.run1kSeconds),
         row1k: formatSecondsToTime(base.row1kSeconds),
         sledPush: formatSecondsToTime(base.sledPushSeconds),
-        squat1rm: base.squat1rmKg || 0
+        squat1rm: base.squat1rmKg !== undefined && base.squat1rmKg !== null ? String(base.squat1rmKg) : ''
       });
     }
   };
@@ -644,7 +644,7 @@ export default function Leaderboard({ currentUser, onReloadPRs }) {
                       type="number"
                       className="form-input"
                       value={editForm.peso_maximo_kg || ''}
-                      onChange={(e) => setEditForm({ ...editForm, peso_maximo_kg: e.target.value })}
+                      onChange={(e) => setEditForm({ ...editForm, peso_maximo_kg: e.target.value.replace(/^0+(?=\d)/, '') })}
                       required
                       min="1"
                     />
@@ -656,7 +656,7 @@ export default function Leaderboard({ currentUser, onReloadPRs }) {
                       type="number"
                       className="form-input"
                       value={editForm.repeticiones || ''}
-                      onChange={(e) => setEditForm({ ...editForm, repeticiones: e.target.value })}
+                      onChange={(e) => setEditForm({ ...editForm, repeticiones: e.target.value.replace(/^0+(?=\d)/, '') })}
                       required
                       min="1"
                       max="30"
@@ -765,7 +765,7 @@ export default function Leaderboard({ currentUser, onReloadPRs }) {
                         type="number"
                         className="form-input"
                         value={editForm.squat1rm || ''}
-                        onChange={(e) => setEditForm({ ...editForm, squat1rm: e.target.value })}
+                        onChange={(e) => setEditForm({ ...editForm, squat1rm: e.target.value.replace(/^0+(?=\d)/, '') })}
                         required
                         min="1"
                       />

@@ -585,7 +585,7 @@ export default function AdminPanel({ onUpdateUser }) {
                       type="number" 
                       className="form-input" 
                       value={creditsToLoad}
-                      onChange={(e) => setCreditsToLoad(e.target.value)}
+                      onChange={(e) => setCreditsToLoad(e.target.value.replace(/^0+(?=\d)/, ''))}
                       min="1"
                       required
                     />
@@ -596,7 +596,7 @@ export default function AdminPanel({ onUpdateUser }) {
                       type="number" 
                       className="form-input" 
                       value={paymentAmount}
-                      onChange={(e) => setPaymentAmount(e.target.value)}
+                      onChange={(e) => setPaymentAmount(e.target.value.replace(/^0+(?=\d)/, ''))}
                       min="0"
                       required
                     />
@@ -710,7 +710,7 @@ export default function AdminPanel({ onUpdateUser }) {
                       className="form-input" 
                       min="0"
                       value={regCredits}
-                      onChange={(e) => setRegCredits(e.target.value)}
+                      onChange={(e) => setRegCredits(e.target.value.replace(/^0+(?=\d)/, ''))}
                     />
                   </div>
                 </div>
@@ -724,7 +724,7 @@ export default function AdminPanel({ onUpdateUser }) {
                         className="form-input" 
                         min="0"
                         value={regAmount}
-                        onChange={(e) => setRegAmount(e.target.value)}
+                        onChange={(e) => setRegAmount(e.target.value.replace(/^0+(?=\d)/, ''))}
                       />
                     </div>
                     <div className="form-group" style={{ marginBottom: 0 }}>
