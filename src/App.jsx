@@ -264,7 +264,7 @@ export default function App() {
         setPrs(loadedPRs);
         await loadAppBookings();
       } else {
-        setLoginError('Usuario o contraseña incorrectos. Intenta con gestor, lucas o sofia (clave: 123).');
+        setLoginError('Usuario o contraseña incorrectos. Por favor, verifica tus datos.');
       }
     } catch (err) {
       setLoginError(err.message);
